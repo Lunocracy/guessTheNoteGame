@@ -1,0 +1,39 @@
+{
+  "name": "guessTheNoteGame",
+  "version": "1.0.0",
+  "description": "Musical pitch and note identification game with multi-instrument synthesis",
+  "type": "luno-web-app",
+  "mainClass": "GuessTheNoteGame",
+  "entrypoint": {
+    "file": "js/GuessTheNoteGame.js",
+    "class": "GuessTheNoteGame",
+    "method": "run"
+  },
+  "main": [
+    "js/PianoUtils.js",
+    "js/KeySignatureSelector.js",
+    "js/InstrumentSelector.js",
+    "js/ScoreBox.js",
+    "js/Piano.js",
+    "js/GameBox.js",
+    "js/GuessTheNoteGame.js"
+  ],
+  "library": [
+    "DomBasics.js",
+    "GraphicPiano.js",
+    "GlowPiano.js",
+    "SmartElementPositioner.js",
+    "sound_engines/InstrumentSounds.js",
+    "sound_engines/PianoSamplePlayer.js",
+    "sound_engines/TinySynth.js",
+    "sound_engines/WafLoader.js",
+    "sound_engines/WafPlayer.js"
+  ],
+  "styles": [],
+  "processedCountSinceCheckpoint": 3,
+  "changedMethods": {
+    "Library/sound_engines/InstrumentSounds.js": "2026-08-24T17:26:46.014Z",
+    "guessTheNoteGame/luno.json": "2026-08-24T17:26:46.014Z",
+    "guessTheNoteGame/index.html": "2026-08-24T17:26:46.014Z"
+  }
+}
