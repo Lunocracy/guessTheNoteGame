@@ -1,45 +1,46 @@
-
 class Piano {
   constructor() {
-      this.settings = {
-        keyWidth: 20,
-        keyHeight: 30,
-        keySpacing: 5,
-        whiteKeyColor: '#e0e0e0',
-        blackKeyColor: '#505050',
-        fullStartMidi: 53,
-        fullEndMidi: 76,
-        gameStartMidi: 60,
-        gameEndMidi: 71,
-        padding: [10, 10], // <-- FIXED: Reduced padding to maximize key length
-      };
+    this.settings = {
+      keyWidth: 20,
+      keyHeight: 30,
+      keySpacing: 5,
+      whiteKeyColor: '#e0e0e0',
+      blackKeyColor: '#505050',
+      fullStartMidi: 53,
+      fullEndMidi: 76,
+      gameStartMidi: 60,
+      gameEndMidi: 71,
+      padding: [10, 10],
+    };
 
-      this.containerDiv = this.createContainerDiv();
-      this.svgElement = this.createSvgElement();
-      this.containerDiv.appendChild(this.svgElement);
+    this.containerDiv = this.createContainerDiv();
+    this.svgElement = this.createSvgElement();
+    this.containerDiv.appendChild(this.svgElement);
 
-      this.graphicPiano = new GraphicPiano(this.svgElement, {
-        startMidi: this.settings.fullStartMidi,
-        endMidi: this.settings.fullEndMidi,
-        padding: this.settings.padding,
-        blackKeyHeightRatio: 0.55,
-        cornerRadius: 5,
-        keySpacing: this.settings.keySpacing,
-      });
-      this.glowPiano = new GlowPiano(this.graphicPiano);
+    this.graphicPiano = new GraphicPiano(this.svgElement, {
+      startMidi: this.settings.fullStartMidi,
+      endMidi: this.settings.fullEndMidi,
+      padding: this.settings.padding,
+      blackKeyHeightRatio: 0.55,
+      cornerRadius: 5,
+      keySpacing: this.settings.keySpacing,
+    });
+    this.glowPiano = new GlowPiano(this.graphicPiano);
 
-      this.gameRange = {
-        startMidi: this.settings.gameStartMidi,
-        endMidi: this.settings.gameEndMidi,
-      };
-    }
+    this.gameRange = {
+      startMidi: this.settings.gameStartMidi,
+      endMidi: this.settings.gameEndMidi,
+    };
+
+    this.middleCIndicator = null;
+    this.showMiddleCMarker = false;
+  }
 
   createContainerDiv() {
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.overflow = 'hidden';
-    container.style.transition = 'left 0.3s ease';
-    // Removed: container.style.pointerEvents = 'none';
+    container.style.transition = 'left 0.35s ease';
     return container;
   }
 
@@ -58,74 +59,147 @@ class Piano {
     });
   }
 
-  setSizeAndPosition(containerWidth, containerHeight, skipInit) {
-      let totalWhiteKeys = 0;
-      for (let m = this.settings.fullStartMidi; m <= this.settings.fullEndMidi; m++) {
-        const keyIndex = m % 12;
-        const isBlack = [1, 3, 6, 8, 10].includes(keyIndex);
-        if (!isBlack) totalWhiteKeys++;
-      }
-
-      // Balance key aspect ratio so they aren't unnaturally tall.
-      // 0.22 width vs height provides a classic piano key proportion ratio (~4.5)
-      let targetKeyWidth = containerHeight * 0.22;
-      let visibleWhiteKeys = containerWidth / targetKeyWidth;
-
-      let gameRangeWhiteKeys = 0;
-      for (let m = this.gameRange.startMidi; m <= this.gameRange.endMidi; m++) {
-        const isBlack = [1, 3, 6, 8, 10].includes(m % 12);
-        if (!isBlack) gameRangeWhiteKeys++;
-      }
-
-      const minVisible = Math.max(7, gameRangeWhiteKeys);
-
-      if (visibleWhiteKeys < minVisible) {
-        visibleWhiteKeys = minVisible;
-        targetKeyWidth = containerWidth / visibleWhiteKeys;
-      } else if (visibleWhiteKeys > totalWhiteKeys) {
-        visibleWhiteKeys = totalWhiteKeys;
-        
-        // Scale up slightly to fill space on ultrawide monitors, but cap at a max fatness of 30%
-        const maxKeyWidth = containerHeight * 0.30;
-        const fillWidth = containerWidth / totalWhiteKeys;
-        targetKeyWidth = Math.min(maxKeyWidth, fillWidth);
-      }
-
-      const svgWidth = targetKeyWidth * totalWhiteKeys;
-      const svgHeight = containerHeight;
-
-      this.containerDiv.style.width = `${svgWidth}px`;
-      this.containerDiv.style.height = `${svgHeight}px`;
-
-      if (!skipInit) {
-        this.graphicPiano.updateSize(svgWidth, svgHeight);
-        this.glowPiano.initialize();
-      }
-
-      let gameRangeWhiteKeyCountBefore = 0;
-      for (let m = this.settings.fullStartMidi; m < this.gameRange.startMidi; m++) {
-        const isBlack = [1, 3, 6, 8, 10].includes(m % 12);
-        if (!isBlack) gameRangeWhiteKeyCountBefore++;
-      }
-
-      const startPixel = gameRangeWhiteKeyCountBefore * targetKeyWidth;
-      const rangeWidthPixel = gameRangeWhiteKeys * targetKeyWidth;
-      const centerPixel = startPixel + rangeWidthPixel / 2;
-
-      let leftOffset = containerWidth / 2 - centerPixel;
-
-      if (svgWidth <= containerWidth) {
-        leftOffset = (containerWidth - svgWidth) / 2;
-      } else {
-        const minOffset = containerWidth - svgWidth;
-        const maxOffset = 0;
-        leftOffset = Math.max(minOffset, Math.min(maxOffset, leftOffset));
-      }
-
-      this.containerDiv.style.left = `${leftOffset}px`;
+  setupMiddleCMarker() {
+    if (this.middleCIndicator && this.middleCIndicator.parentElement) {
+      this.middleCIndicator.remove();
     }
 
-  glowPianoInitialized = false;
+    const keyData = this.graphicPiano?.getKeyByMidi?.(60);
+    if (!keyData || !keyData.bbox) return;
+
+    this.middleCIndicator = makeElement('div', {
+      className: 'middle-c-marker',
+      title: 'Middle C (C4)',
+      style: {
+        position: 'absolute',
+        zIndex: '15',
+        pointerEvents: 'none',
+        display: this.showMiddleCMarker ? 'flex' : 'none',
+        flexDirection: 'column',
+        alignItems: 'center',
+        opacity: '0.85',
+        transition: 'opacity 0.2s ease',
+      }
+    }, [
+      makeElement('div', {
+        textContent: '▲',
+        style: { fontSize: '11px', color: '#00f2fe', lineHeight: '1', textShadow: '0 0 4px #00f2fe' }
+      }),
+      makeElement('div', {
+        textContent: 'C4',
+        style: {
+          fontSize: '9px',
+          fontWeight: 'bold',
+          color: '#ffffff',
+          background: 'rgba(0, 180, 255, 0.75)',
+          padding: '1px 3px',
+          borderRadius: '3px',
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        }
+      })
+    ]);
+
+    this.addOverlayElement(60, this.middleCIndicator, { bottomOffset: 30 });
+  }
+
+  setMiddleCMarkerVisibility(visible) {
+    this.showMiddleCMarker = visible;
+    if (this.middleCIndicator) {
+      this.middleCIndicator.style.display = visible ? 'flex' : 'none';
+    } else if (visible) {
+      this.setupMiddleCMarker();
+    }
+  }
+
+  setSizeAndPosition(containerWidth, containerHeight, skipInit) {
+    if (!containerWidth || !containerHeight) return;
+
+    let totalWhiteKeys = 0;
+    for (let m = this.settings.fullStartMidi; m <= this.settings.fullEndMidi; m++) {
+      const keyIndex = m % 12;
+      const isBlack = [1, 3, 6, 8, 10].includes(keyIndex);
+      if (!isBlack) totalWhiteKeys++;
+    }
+
+    let targetKeyWidth = containerHeight * 0.22;
+    let visibleWhiteKeys = containerWidth / targetKeyWidth;
+
+    let gameRangeWhiteKeys = 0;
+    for (let m = this.gameRange.startMidi; m <= this.gameRange.endMidi; m++) {
+      const isBlack = [1, 3, 6, 8, 10].includes(m % 12);
+      if (!isBlack) gameRangeWhiteKeys++;
+    }
+
+    const minVisible = Math.max(7, gameRangeWhiteKeys);
+
+    if (visibleWhiteKeys < minVisible) {
+      visibleWhiteKeys = minVisible;
+      targetKeyWidth = containerWidth / visibleWhiteKeys;
+    } else if (visibleWhiteKeys > totalWhiteKeys) {
+      visibleWhiteKeys = totalWhiteKeys;
+      const maxKeyWidth = containerHeight * 0.30;
+      const fillWidth = containerWidth / totalWhiteKeys;
+      targetKeyWidth = Math.min(maxKeyWidth, fillWidth);
+    }
+
+    const svgWidth = targetKeyWidth * totalWhiteKeys;
+    const svgHeight = containerHeight;
+
+    this.containerDiv.style.width = `${svgWidth}px`;
+    this.containerDiv.style.height = `${svgHeight}px`;
+
+    if (!skipInit) {
+      this.graphicPiano.updateSize(svgWidth, svgHeight);
+      this.glowPiano.initialize();
+      this.setupMiddleCMarker();
+    }
+
+    let gameRangeWhiteKeyCountBefore = 0;
+    for (let m = this.settings.fullStartMidi; m < this.gameRange.startMidi; m++) {
+      const isBlack = [1, 3, 6, 8, 10].includes(m % 12);
+      if (!isBlack) gameRangeWhiteKeyCountBefore++;
+    }
+
+    const startPixel = gameRangeWhiteKeyCountBefore * targetKeyWidth;
+    const rangeWidthPixel = gameRangeWhiteKeys * targetKeyWidth;
+    const centerPixel = startPixel + rangeWidthPixel / 2;
+
+    let leftOffset = containerWidth / 2 - centerPixel;
+
+    if (svgWidth <= containerWidth) {
+      leftOffset = (containerWidth - svgWidth) / 2;
+    } else {
+      const minOffset = containerWidth - svgWidth;
+      const maxOffset = 0;
+      leftOffset = Math.max(minOffset, Math.min(maxOffset, leftOffset));
+    }
+
+    this.containerDiv.style.left = `${leftOffset}px`;
+  }
+
+  centerOnMidi(midi) {
+    if (!this.containerDiv || !this.containerDiv.parentElement || !this.graphicPiano) return;
+    const parentContainer = this.containerDiv.parentElement;
+    const containerWidth = parentContainer.offsetWidth;
+    if (!containerWidth) return;
+
+    const keyData = this.graphicPiano.getKeyByMidi ? this.graphicPiano.getKeyByMidi(midi) : null;
+    if (!keyData || !keyData.bbox) return;
+
+    const keyCenterX = keyData.bbox.position[0] + keyData.bbox.size[0] / 2;
+    const svgWidth = parseFloat(this.containerDiv.style.width) || containerWidth;
+
+    let leftOffset = containerWidth / 2 - keyCenterX;
+    if (svgWidth <= containerWidth) {
+      leftOffset = (containerWidth - svgWidth) / 2;
+    } else {
+      const minOffset = containerWidth - svgWidth;
+      leftOffset = Math.max(minOffset, Math.min(0, leftOffset));
+    }
+
+    this.containerDiv.style.transition = 'left 0.35s ease';
+    this.containerDiv.style.left = `${leftOffset}px`;
+  }
 
   setGameRange(startMidi, endMidi) {
     startMidi = Math.max(
@@ -135,54 +209,46 @@ class Piano {
     endMidi = startMidi + 11;
     this.gameRange = { startMidi, endMidi };
 
-    this.setSizeAndPosition(
-      this.containerDiv.parentElement.offsetWidth,
-      this.containerDiv.parentElement.offsetHeight,
-      true
-    );
+    if (this.containerDiv.parentElement) {
+      this.setSizeAndPosition(
+        this.containerDiv.parentElement.offsetWidth,
+        this.containerDiv.parentElement.offsetHeight,
+        true
+      );
+    }
   }
 
   addOverlayElement(midi, element, options = {}) {
-    const keyData = this.graphicPiano.getKeyByMidi(midi);
-    if (!keyData || !keyData.bbox) {
-      console.warn(`No bounding box data for MIDI ${midi}`);
-      return;
-    }
+    const keyData = this.graphicPiano?.getKeyByMidi?.(midi);
+    if (!keyData || !keyData.bbox) return;
 
     const {
       position: [x, y],
       size: [width, height],
-      isBlack,
     } = keyData.bbox;
 
-    // Default styling
     element.style.position = 'absolute';
-    element.style.left = `${x + width / 2}px`; // Center horizontally
-    element.style.transform = 'translateX(-50%)'; // Horizontal centering only
-    element.style.pointerEvents = 'none'; // Overlays don’t block clicks
+    element.style.left = `${x + width / 2}px`;
+    element.style.transform = 'translateX(-50%)';
+    element.style.pointerEvents = 'none';
     element.style.zIndex = '10';
-    element.style.fontFamily = '"Architects Daughter", Arial, sans-serif'; // Consistent font
+    element.style.fontFamily = '"Architects Daughter", Arial, sans-serif';
 
-    // Get element height (assume 48px for text, 50px for SVG unless specified)
     const elementHeight =
       parseFloat(element.style.height) ||
       (element.tagName.toLowerCase() === 'svg' ? 50 : 48);
-    // Vertical positioning: bottomOffset is distance from key bottom to element bottom
-    const bottomOffset =
-      options.bottomOffset !== undefined ? options.bottomOffset : 5; // Default 5px above bottom
-    element.style.top = `${y + height - elementHeight - bottomOffset}px`; // Position bottom of element
+    const bottomOffset = options.bottomOffset !== undefined ? options.bottomOffset : 5;
+    element.style.top = `${y + height - elementHeight - bottomOffset}px`;
 
-    // Optional custom styling from options
     if (options.color) element.style.color = options.color;
     if (options.fontSize) element.style.fontSize = options.fontSize;
     if (options.textShadow) element.style.textShadow = options.textShadow;
 
-    // Append to the sliding container
     this.containerDiv.appendChild(element);
   }
 
   removeOverlayElement(element) {
-    if (this.containerDiv.contains(element)) {
+    if (this.containerDiv && element && this.containerDiv.contains(element)) {
       this.containerDiv.removeChild(element);
     }
   }
@@ -190,6 +256,7 @@ class Piano {
   getContainer() {
     return this.containerDiv;
   }
-
 }
 
+globalThis.Piano = Piano;
+if (typeof module !== 'undefined' && module.exports) module.exports = Piano;

@@ -1,7 +1,7 @@
 {
   "name": "guessTheNoteGame",
-  "version": "1.0.0",
-  "description": "Musical pitch and note identification game with multi-instrument synthesis",
+  "version": "1.2.1",
+  "description": "Musical pitch and note identification game with ear training and staff sight-reading modes",
   "type": "luno-web-app",
   "mainClass": "GuessTheNoteGame",
   "entrypoint": {
@@ -14,6 +14,7 @@
     "js/KeySignatureSelector.js",
     "js/InstrumentSelector.js",
     "js/ScoreBox.js",
+    "js/StaffView.js",
     "js/Piano.js",
     "js/GameBox.js",
     "js/GuessTheNoteGame.js"
@@ -30,13 +31,14 @@
     "sound_engines/WafPlayer.js"
   ],
   "styles": [],
-  "processedCountSinceCheckpoint": 14,
+  "processedCountSinceCheckpoint": 10,
   "changedMethods": {
-    "Library/sound_engines/InstrumentSounds.js": "2026-08-24T17:26:46.014Z",
-    "guessTheNoteGame/luno.json": "2026-08-24T17:26:46.014Z",
-    "guessTheNoteGame/index.html": "2026-08-24T17:34:50.108Z",
-    "Library/SmartElementPositioner.js": "2026-08-24T17:49:45.110Z",
-    "Library/SmartElementPositioner.js.bak": "2026-08-24T17:49:45.110Z",
-    "LunoPatchLog.html": "2026-08-24T17:49:45.110Z"
+    "guessTheNoteGame/files.json": "2026-08-25T02:14:23.339Z",
+    "guessTheNoteGame/luno.json": "2026-08-25T02:14:23.339Z",
+    "guessTheNoteGame/js/PianoUtils.js": "2026-08-25T02:14:23.339Z",
+    "guessTheNoteGame/js/StaffView.js": "2026-08-25T02:35:17.284Z",
+    "guessTheNoteGame/js/GameBox.js": "2026-08-25T02:35:17.284Z",
+    "guessTheNoteGame/js/Piano.js": "2026-08-25T02:35:17.284Z",
+    "guessTheNoteGame/js/GuessTheNoteGame.js": "2026-08-25T02:41:20.397Z"
   }
 }

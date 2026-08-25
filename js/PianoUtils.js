@@ -80,6 +80,7 @@ class PianoUtils {
     const noteIndex = midi % 12;
     return `${noteNames[noteIndex]}${octave}`;
   }
-
 }
 
+globalThis.PianoUtils = PianoUtils;
+if (typeof module !== 'undefined' && module.exports) module.exports = PianoUtils;
