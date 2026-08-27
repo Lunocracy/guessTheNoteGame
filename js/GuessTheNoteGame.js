@@ -36,7 +36,6 @@ class GuessTheNoteGame {
     this.currentModeIndex = 0;
 
     this.scoreBox = new ScoreBox(this.rootElement);
-    this.scoreBox.start();
 
     this.gameBox = new GameBox();
     this.gameBox.start(this.rootElement, (newMode) => this.handleModeChange(newMode));
@@ -84,7 +83,7 @@ class GuessTheNoteGame {
         this.keySelector.toggleButton.style.display = 'none';
       }
       this.piano.setMiddleCMarkerVisibility(true);
-      this.gameBox.setFeedbackText('Play the note shown on staff!');
+      this.gameBox.setFeedbackText('play the note...');
     } else {
       if (this.keySelector && this.keySelector.toggleButton) {
         this.keySelector.toggleButton.style.display = 'flex';
@@ -120,12 +119,14 @@ class GuessTheNoteGame {
     }
 
     this.gameBox.getPlayAgainButton().addEventListener('click', () => {
-      if (
-        this.state === this.States.GUESSING ||
-        (this.state === this.States.FEEDBACK &&
-          !this.gameBox.getPromptDiv().classList.contains('correct'))
-      ) {
-        this.playSequence();
+      if (this.gameMode === 'EAR_TRAINING') {
+        if (
+          this.state === this.States.GUESSING ||
+          (this.state === this.States.FEEDBACK &&
+            !this.gameBox.getPromptDiv().classList.contains('correct'))
+        ) {
+          this.playSequence();
+        }
       }
     });
   }
@@ -145,7 +146,7 @@ class GuessTheNoteGame {
     this.targetStaffNote = null;
     this.gameBox.getPromptDiv().classList.remove('correct', 'incorrect', 'pulse-green', 'pulse-red');
     this.gameBox.setFeedbackText(
-      this.gameMode === 'STAFF_READING' ? 'Play the note shown on staff!' : 'guess the note...'
+      this.gameMode === 'STAFF_READING' ? 'play the note...' : 'guess the note...'
     );
     this.gameBox.getNoteSpans().forEach((span) => (span.style.visibility = 'hidden'));
     this.gameBox.getPlayAgainButton().style.visibility = 'hidden';
@@ -171,47 +172,124 @@ class GuessTheNoteGame {
     const promptDiv = this.gameBox.getPromptDiv();
     if (promptDiv) promptDiv.classList.remove('correct', 'incorrect', 'pulse-green', 'pulse-red');
 
-    const fullStart = this.piano.settings.fullStartMidi;
-    const fullEnd = this.piano.settings.fullEndMidi;
+    const minStaffMidi = 38; // D2
+    const maxStaffMidi = 81; // A5
 
-    const chosenMidi = Math.floor(Math.random() * (fullEnd - fullStart + 1)) + fullStart;
+    // Enharmonic chromatic map: each semitone supports both sharp and flat spellings
+    const chromaticEnharmonics = {
+      0: [{ name: 'C', accidental: '' }],
+      1: [
+        { name: 'C', accidental: '#' },
+        { name: 'D', accidental: 'b' }
+      ],
+      2: [{ name: 'D', accidental: '' }],
+      3: [
+        { name: 'D', accidental: '#' },
+        { name: 'E', accidental: 'b' }
+      ],
+      4: [{ name: 'E', accidental: '' }],
+      5: [{ name: 'F', accidental: '' }],
+      6: [
+        { name: 'F', accidental: '#' },
+        { name: 'G', accidental: 'b' }
+      ],
+      7: [{ name: 'G', accidental: '' }],
+      8: [
+        { name: 'G', accidental: '#' },
+        { name: 'A', accidental: 'b' }
+      ],
+      9: [{ name: 'A', accidental: '' }],
+      10: [
+        { name: 'A', accidental: '#' },
+        { name: 'B', accidental: 'b' }
+      ],
+      11: [{ name: 'B', accidental: '' }]
+    };
+
+    const chosenMidi = Math.floor(Math.random() * (maxStaffMidi - minStaffMidi + 1)) + minStaffMidi;
     const clef = chosenMidi < 60 ? 'bass' : 'treble';
 
-    const standardDiatonic = [
-      { name: 'C', black: false },
-      { name: 'C', accidental: '#', black: true },
-      { name: 'D', black: false },
-      { name: 'E', accidental: 'b', black: true },
-      { name: 'E', black: false },
-      { name: 'F', black: false },
-      { name: 'F', accidental: '#', black: true },
-      { name: 'G', black: false },
-      { name: 'A', accidental: 'b', black: true },
-      { name: 'A', black: false },
-      { name: 'B', accidental: 'b', black: true },
-      { name: 'B', black: false },
-    ];
-
-    const noteIndex = chosenMidi % 12;
+    const pitchClass = chosenMidi % 12;
     const octave = Math.floor((chosenMidi - 12) / 12);
-    const noteInfo = standardDiatonic[noteIndex];
+    const enharmonicOptions = chromaticEnharmonics[pitchClass];
+    // 50/50 random selection between sharp and flat for chromatic pitches
+    const selectedSpelling = enharmonicOptions[Math.floor(Math.random() * enharmonicOptions.length)];
 
-    const pitchName = `${noteInfo.name}${octave}`;
-    const accidental = noteInfo.accidental || '';
+    const pitchName = `${selectedSpelling.name}${octave}`;
+    const accidental = selectedSpelling.accidental;
 
     this.targetStaffNote = {
       midi: chosenMidi,
       clef: clef,
       pitchName: pitchName,
       accidental: accidental,
+      spelling: selectedSpelling
     };
 
     this.gameBox.displayStaffNote(clef, pitchName, accidental);
-    this.piano.centerOnMidi(chosenMidi);
+    this.piano.centerOnMidi(chosenMidi, true);
+
+    if (window.instruments) {
+      window.instruments.noteOn(chosenMidi, 90);
+      setTimeout(() => {
+        if (window.instruments) window.instruments.noteOff(chosenMidi);
+      }, 800);
+    }
 
     this.staffStartTime = Date.now();
-    this.gameBox.setFeedbackText(`Play the note shown on the ${clef} staff!`);
+    this.gameBox.setFeedbackText('play the note...');
     this.updateUI();
+  }
+
+  handleStaffNoteGuess(midi) {
+    if (!this.targetStaffNote) return;
+
+    const isCorrect = (midi === this.targetStaffNote.midi);
+    const guessedNote = PianoUtils.midiToNoteName(midi);
+    const promptDiv = this.gameBox.getPromptDiv();
+
+    const spelling = this.targetStaffNote.spelling;
+    const displayPitchStr = spelling.accidental 
+      ? `${spelling.name}${spelling.accidental === '#' ? '♯' : '♭'}${Math.floor((this.targetStaffNote.midi - 12) / 12)}`
+      : `${spelling.name}${Math.floor((this.targetStaffNote.midi - 12) / 12)}`;
+
+    const elapsedSec = this.staffStartTime ? ((Date.now() - this.staffStartTime) / 1000).toFixed(1) : '0.5';
+
+    if (isCorrect) {
+      if (this.staffTimeout) clearTimeout(this.staffTimeout);
+      this.state = this.States.FEEDBACK;
+      this.scoreBox.recordGuess(true, { note: displayPitchStr, time: elapsedSec });
+
+      if (promptDiv) {
+        promptDiv.classList.remove('pulse-red', 'incorrect');
+        promptDiv.classList.add('pulse-green', 'correct');
+      }
+      this.gameBox.setFeedbackText(`good job! (${elapsedSec}s)`);
+      this.gameBox.showStaffNoteSuccessOverlay(midi, spelling);
+
+      this.staffTimeout = setTimeout(() => {
+        if (promptDiv) promptDiv.classList.remove('pulse-green', 'correct');
+        if (this.gameMode === 'STAFF_READING') {
+          this.startNewStaffRound();
+        }
+      }, 1200);
+    } else {
+      this.scoreBox.recordGuess(false, { note: `${displayPitchStr} (tried ${guessedNote})`, time: elapsedSec });
+      if (promptDiv) {
+        promptDiv.classList.remove('pulse-green', 'correct');
+        promptDiv.classList.add('pulse-red', 'incorrect');
+      }
+      this.gameBox.setFeedbackText('try again...');
+
+      if (this.staffTimeout) clearTimeout(this.staffTimeout);
+      this.staffTimeout = setTimeout(() => {
+        if (promptDiv) promptDiv.classList.remove('pulse-red', 'incorrect');
+        if (this.state === this.States.FEEDBACK && this.gameMode === 'STAFF_READING') {
+          this.state = this.States.GUESSING;
+          this.gameBox.setFeedbackText('play the note...');
+        }
+      }, 600);
+    }
   }
 
   startNewRound() {
@@ -425,51 +503,6 @@ class GuessTheNoteGame {
       }
 
       this.displayFeedback(midi, isCorrect);
-    }
-  }
-
-  handleStaffNoteGuess(midi) {
-    if (!this.targetStaffNote) return;
-
-    const isCorrect = (midi === this.targetStaffNote.midi);
-    const guessedNote = PianoUtils.midiToNoteName(midi);
-    const promptDiv = this.gameBox.getPromptDiv();
-
-    if (isCorrect) {
-      if (this.staffTimeout) clearTimeout(this.staffTimeout);
-      this.state = this.States.FEEDBACK;
-      this.scoreBox.recordGuess(true);
-
-      const elapsedSec = this.staffStartTime ? ((Date.now() - this.staffStartTime) / 1000).toFixed(1) : '0.5';
-      if (promptDiv) {
-        promptDiv.classList.remove('pulse-red', 'incorrect');
-        promptDiv.classList.add('pulse-green', 'correct');
-      }
-      this.gameBox.setFeedbackText(`🎉 ${guessedNote} is Correct! (${elapsedSec}s)`);
-
-      this.staffTimeout = setTimeout(() => {
-        if (promptDiv) promptDiv.classList.remove('pulse-green', 'correct');
-        if (this.gameMode === 'STAFF_READING') {
-          this.startNewStaffRound();
-        }
-      }, 700);
-    } else {
-      this.scoreBox.recordGuess(false);
-      if (promptDiv) {
-        promptDiv.classList.remove('pulse-green', 'correct');
-        promptDiv.classList.add('pulse-red', 'incorrect');
-      }
-      this.gameBox.setFeedbackText(`${guessedNote} is incorrect - try again!`);
-
-      if (this.staffTimeout) clearTimeout(this.staffTimeout);
-      this.staffTimeout = setTimeout(() => {
-        if (promptDiv) promptDiv.classList.remove('pulse-red', 'incorrect');
-        if (this.state === this.States.FEEDBACK && this.gameMode === 'STAFF_READING') {
-          this.state = this.States.GUESSING;
-          const clef = this.targetStaffNote?.clef || 'treble';
-          this.gameBox.setFeedbackText(`Play the note shown on the ${clef} staff!`);
-        }
-      }, 500);
     }
   }
 
@@ -1092,7 +1125,7 @@ class GuessTheNoteGame {
       }
       .guess-the-note-wrapper .pulse { animation: pulse 0.5s ease-out; }
       @keyframes pulse { 0% { transform: scale(1); } 20% { transform: scale(1.6); } 100% { transform: scale(1); } }
-      .guess-the-note-wrapper .feedbackText { margin: 0.5vh; font-size: 24px; color: #fff; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
+      .guess-the-note-wrapper .feedbackText { margin: 0.5vh; font-size: 20px; color: #fff; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
       .guess-the-note-wrapper .noteDisplay { display: flex; justify-content: center; gap: 20px; margin: 0.5vh; }
       .guess-the-note-wrapper .noteDisplay span { width: 100px; text-align: center; visibility: hidden; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); display: inline-block; white-space: nowrap; }
       
@@ -1139,7 +1172,7 @@ class GuessTheNoteGame {
 
       @keyframes pulseGreenPrompt { 0% { background-color: rgba(0, 0, 0, 0.75); } 8% { background-color: rgba(33, 190, 33, 0.92); } 100% { background-color: rgba(0, 0, 0, 0.75); } }
       @keyframes pulseRedPrompt { 0% { background-color: rgba(0, 0, 0, 0.75); } 20% { background-color: rgba(150, 33, 33, 0.92); } 100% { background-color: rgba(0, 0, 0, 0.75); } }
-      .guess-the-note-wrapper .game-box.pulse-green { animation: pulseGreenPrompt 2.2s ease-out 1 !important; }
+      .guess-the-note-wrapper .game-box.pulse-green { animation: pulseGreenPrompt 1.2s ease-out 1 !important; }
       .guess-the-note-wrapper .game-box.pulse-red { animation: pulseRedPrompt 0.8s ease-out 1 !important; }
       @keyframes pulseOverlay { 0% { transform: scale(1) translateX(-50%); opacity: 1; } 50% { transform: scale(1.6) translateX(-50%); opacity: 0.8; } 100% { transform: scale(1) translateX(-50%); opacity: 1; } }
       .guess-the-note-wrapper .pulse-overlay { animation: pulseOverlay 0.5s ease-out; transform-origin: center center; }

@@ -3,9 +3,10 @@ class GameBox {
     this.noteSpans = [];
     this.staffView = new StaffView();
     this.currentMode = 'EAR_TRAINING';
+    this.lastStaffNoteParams = null;
     this.config = {
       noteBaseFontSize: 400,
-      feedbackBaseFontSize: 30,
+      feedbackBaseFontSize: 24,
       buttonBaseFontSize: 18,
       playAgainBaseFontSize: 16,
     };
@@ -26,7 +27,7 @@ class GameBox {
         flexDirection: 'column',
         alignItems: 'center',
         fontFamily: '"Architects Daughter", Arial, sans-serif',
-        overflow: 'hidden',
+        overflow: 'visible',
         boxSizing: 'border-box',
       },
       className: 'game-box',
@@ -48,19 +49,19 @@ class GameBox {
           });
         }
 
-        const feedbackHeight = pixelDims.height * 0.18;
-        const feedbackFontSize = Math.max(14, this.config.feedbackBaseFontSize * fontScale);
+        const feedbackHeight = pixelDims.height * 0.16;
+        const feedbackFontSize = Math.max(13, this.config.feedbackBaseFontSize * fontScale);
         this.feedbackText.style.height = `${feedbackHeight}px`;
         this.feedbackText.style.lineHeight = `${feedbackHeight}px`;
         this.feedbackText.style.fontSize = `${feedbackFontSize}px`;
         this.feedbackText.style.width = '100%';
 
-        const middleSlotHeight = pixelDims.height * 0.52;
+        const middleSlotHeight = pixelDims.height * 0.54;
         this.noteDisplay.style.height = `${middleSlotHeight}px`;
         this.noteDisplay.style.width = '100%';
 
-        this.staffDisplay.style.height = `${middleSlotHeight}px`;
-        this.staffDisplay.style.width = '100%';
+        this.staffDisplayWrapper.style.height = `${middleSlotHeight}px`;
+        this.staffDisplayWrapper.style.width = '100%';
 
         const numSpans = this.noteSpans.length || 3;
         const noteSpanWidthPixels = Math.min(pixelDims.width / (numSpans + 0.5), pixelDims.width * 0.22);
@@ -105,6 +106,18 @@ class GameBox {
       },
     });
 
+    const topHeaderBar = makeElement('div', {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
+        width: '100%',
+        marginTop: '4px',
+        flexShrink: '0',
+      }
+    });
+
     this.modeSwitcher = makeElement('div', {
       className: 'mode-toggle-group',
       style: {
@@ -113,8 +126,6 @@ class GameBox {
         overflow: 'hidden',
         border: '1px solid rgba(255, 255, 255, 0.25)',
         background: 'rgba(0, 0, 0, 0.5)',
-        flexShrink: '0',
-        marginTop: '4px',
       },
     });
 
@@ -130,7 +141,28 @@ class GameBox {
     });
     this.modeSwitcher.appendChild(this.earModeBtn);
     this.modeSwitcher.appendChild(this.staffModeBtn);
-    this.div.appendChild(this.modeSwitcher);
+    topHeaderBar.appendChild(this.modeSwitcher);
+
+    this.rainbowToggleBtn = makeElement('button', {
+      textContent: '🌈',
+      title: 'Toggle Staff Rainbow Spectrum',
+      className: 'rainbow-toggle-btn active',
+      style: {
+        display: 'none',
+        background: 'rgba(2, 132, 199, 0.4)',
+        border: '1px solid #00f2fe',
+        borderRadius: '8px',
+        padding: '3px 8px',
+        cursor: 'pointer',
+        fontSize: '14px',
+        lineHeight: '1',
+        transition: 'all 0.15s ease',
+      },
+      onclick: () => this.toggleRainbowMode(),
+    });
+    topHeaderBar.appendChild(this.rainbowToggleBtn);
+
+    this.div.appendChild(topHeaderBar);
 
     this.feedbackText = makeElement('p', {
       className: 'feedbackText',
@@ -163,18 +195,60 @@ class GameBox {
     });
     this.div.appendChild(this.noteDisplay);
 
-    this.staffDisplay = makeElement('div', {
-      className: 'staffDisplay',
+    this.staffDisplayWrapper = makeElement('div', {
+      className: 'staffDisplayWrapper',
       style: {
+        position: 'relative',
         display: 'none',
         width: '100%',
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
         flexGrow: '1',
-      },
+      }
     });
-    this.div.appendChild(this.staffDisplay);
+
+    this.staffDisplay = makeElement('div', {
+      className: 'staffDisplay',
+      style: {
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }
+    });
+    this.staffDisplayWrapper.appendChild(this.staffDisplay);
+
+    // Superimposed badge with single-color representation matching note letter
+    this.superimposedSuccessBadge = makeElement('div', {
+      className: 'superimposed-success-badge',
+      style: {
+        position: 'absolute',
+        bottom: '-38px',
+        left: '50%',
+        transform: 'translate(-50%, 0) scale(0.6)',
+        opacity: '0',
+        pointerEvents: 'none',
+        zIndex: '50',
+        transition: 'all 0.22s cubic-bezier(0.18, 0.89, 0.32, 1.28)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(0, 0, 0, 0.30)',
+        border: 'none',
+        borderRadius: '12px',
+        padding: '2px 18px 4px 18px',
+        boxShadow: 'none',
+        fontFamily: '"Architects Daughter", Arial, sans-serif',
+        fontSize: '44px',
+        fontWeight: 'bold',
+        lineHeight: '0.85',
+      }
+    });
+    this.div.appendChild(this.superimposedSuccessBadge);
+
+    this.div.appendChild(this.staffDisplayWrapper);
 
     this.buttonSlot = makeElement('div', {
       id: 'button-slot',
@@ -222,34 +296,132 @@ class GameBox {
     this.positioner.update();
   }
 
+  showStaffNoteSuccessOverlay(midiCode, enharmonicInfo = null) {
+    const diatonicLetterOffsets = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+    let letterName = '';
+    let isFlat = false;
+    let isSharp = false;
+    let rootColorMidi = midiCode;
+
+    if (enharmonicInfo) {
+      letterName = enharmonicInfo.name.toLowerCase();
+      isFlat = (enharmonicInfo.accidental === 'b');
+      isSharp = (enharmonicInfo.accidental === '#');
+      const letterUpper = enharmonicInfo.name.toUpperCase();
+      const semitoneOffset = diatonicLetterOffsets[letterUpper] !== undefined ? diatonicLetterOffsets[letterUpper] : (midiCode % 12);
+      rootColorMidi = 60 + semitoneOffset;
+    } else {
+      const keyIndex = (midiCode - 12) % 12;
+      const key = PianoUtils.PianoKeys.dims[keyIndex];
+      const prevKeyIndex = (keyIndex - 1 + 12) % 12;
+      const prevKey = PianoUtils.PianoKeys.dims[prevKeyIndex];
+      if (!key.black) {
+        letterName = key.name.toLowerCase();
+        rootColorMidi = midiCode;
+      } else {
+        letterName = prevKey.name.toLowerCase();
+        isSharp = true;
+        rootColorMidi = midiCode - 1;
+      }
+    }
+
+    // Single unified color representing the root letter name
+    const singleColorRgb = PianoUtils.getNoteColor(rootColorMidi);
+    const singleColorHex = PianoUtils.rgbToHex(PianoUtils.toPastel(singleColorRgb));
+
+    this.superimposedSuccessBadge.innerHTML = '';
+
+    const baseSpan = makeElement('span', {
+      textContent: letterName,
+      style: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        fontFamily: 'inherit',
+        color: singleColorHex,
+        transform: 'translateY(-2px)',
+        textShadow: '-2px -2px 1px white, 3px 3px 6px black',
+      }
+    });
+
+    if (isFlat || isSharp) {
+      const accidentalSpan = makeElement('span', {
+        textContent: isFlat ? '♭' : '♯',
+        style: {
+          display: 'inline-block',
+          verticalAlign: 'middle',
+          color: singleColorHex,
+          fontFamily: isFlat ? "'Times New Roman', serif" : 'inherit',
+          fontSize: isFlat ? '0.78em' : '0.88em',
+          marginLeft: '1px',
+          transform: isFlat ? 'translateY(-1px)' : 'translateY(-2px)',
+          textShadow: '-2px -2px 1px white, 3px 3px 6px black',
+        }
+      });
+      baseSpan.appendChild(accidentalSpan);
+    }
+
+    this.superimposedSuccessBadge.appendChild(baseSpan);
+    this.superimposedSuccessBadge.style.opacity = '1';
+    this.superimposedSuccessBadge.style.transform = 'translate(-50%, 0) scale(1.0)';
+
+    setTimeout(() => {
+      this.superimposedSuccessBadge.style.opacity = '0';
+      this.superimposedSuccessBadge.style.transform = 'translate(-50%, 0) scale(0.6)';
+    }, 1100);
+  }
+
+  toggleRainbowMode() {
+    this.staffView.showRainbow = !this.staffView.showRainbow;
+    this.rainbowToggleBtn.style.background = this.staffView.showRainbow
+      ? 'rgba(2, 132, 199, 0.4)'
+      : 'rgba(255, 255, 255, 0.08)';
+    this.rainbowToggleBtn.style.borderColor = this.staffView.showRainbow
+      ? '#00f2fe'
+      : 'rgba(255, 255, 255, 0.2)';
+
+    if (this.lastStaffNoteParams) {
+      this.displayStaffNote(
+        this.lastStaffNoteParams.clef,
+        this.lastStaffNoteParams.pitchName,
+        this.lastStaffNoteParams.accidental
+      );
+    }
+  }
+
   selectMode(mode) {
     this.currentMode = mode;
     if (mode === 'EAR_TRAINING') {
       this.earModeBtn.classList.add('active');
       this.staffModeBtn.classList.remove('active');
-      this.staffDisplay.style.display = 'none';
+      this.staffDisplayWrapper.style.display = 'none';
       this.noteDisplay.style.display = 'flex';
       this.startTwoPlayerButton.style.display = 'inline-flex';
       this.startButton.textContent = 'Single Player';
       this.feedbackText.textContent = 'guess the note...';
+      this.rainbowToggleBtn.style.display = 'none';
+      this.playAgainButton.textContent = 'Play Notes Again';
     } else {
       this.staffModeBtn.classList.add('active');
       this.earModeBtn.classList.remove('active');
       this.noteDisplay.style.display = 'none';
-      this.staffDisplay.style.display = 'flex';
+      this.staffDisplayWrapper.style.display = 'flex';
       this.startTwoPlayerButton.style.display = 'none';
       this.startButton.textContent = 'Start Staff Reading';
-      this.feedbackText.textContent = 'Play the note shown on staff!';
+      this.feedbackText.textContent = 'play the note...';
+      this.rainbowToggleBtn.style.display = 'inline-flex';
+      this.playAgainButton.style.visibility = 'hidden';
     }
     if (this.onModeChange) this.onModeChange(mode);
     if (this.positioner) this.positioner.update();
   }
 
   displayStaffNote(clef, pitchName, accidental = '') {
+    this.lastStaffNoteParams = { clef, pitchName, accidental };
     this.staffDisplay.innerHTML = '';
     const staffSvg = this.staffView.createStaffElement(clef, pitchName, accidental, { width: 380, height: 135 });
     this.staffDisplay.appendChild(staffSvg);
-    this.staffDisplay.style.display = 'flex';
+    this.staffDisplayWrapper.style.display = 'flex';
     if (this.positioner) this.positioner.update();
   }
 
@@ -399,22 +571,25 @@ class GameBox {
     }
 
     const promptDivHasCorrectClass = this.getPromptDiv()?.classList.contains('correct');
-    this.playAgainButton.style.visibility =
-      this.currentMode === 'EAR_TRAINING' &&
-      (state === 'GUESSING' || (state === 'FEEDBACK' && !promptDivHasCorrectClass))
-        ? 'visible'
-        : 'hidden';
-
+    
     if (this.currentMode === 'EAR_TRAINING') {
+      this.playAgainButton.textContent = 'Play Notes Again';
+      this.playAgainButton.style.visibility =
+        state === 'GUESSING' || (state === 'FEEDBACK' && !promptDivHasCorrectClass)
+          ? 'visible'
+          : 'hidden';
       const notesGenerated = this.noteSpans.length > 0;
       this.noteDisplay.style.visibility =
         notesGenerated && ['PLAYING', 'GUESSING', 'FEEDBACK'].includes(state)
           ? 'visible'
           : 'hidden';
-      this.staffDisplay.style.display = 'none';
+      this.staffDisplayWrapper.style.display = 'none';
+      this.rainbowToggleBtn.style.display = 'none';
     } else {
+      this.playAgainButton.style.visibility = 'hidden';
       this.noteDisplay.style.display = 'none';
-      this.staffDisplay.style.display = state === 'IDLE' ? 'none' : 'flex';
+      this.staffDisplayWrapper.style.display = state === 'IDLE' ? 'none' : 'flex';
+      this.rainbowToggleBtn.style.display = 'inline-flex';
     }
 
     this.feedbackText.style.visibility = 'visible';

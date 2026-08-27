@@ -6,8 +6,8 @@ class Piano {
       keySpacing: 5,
       whiteKeyColor: '#e0e0e0',
       blackKeyColor: '#505050',
-      fullStartMidi: 53,
-      fullEndMidi: 76,
+      fullStartMidi: 33,
+      fullEndMidi: 88,
       gameStartMidi: 60,
       gameEndMidi: 71,
       padding: [10, 10],
@@ -177,7 +177,7 @@ class Piano {
     this.containerDiv.style.left = `${leftOffset}px`;
   }
 
-  centerOnMidi(midi) {
+  centerOnMidi(midi, randomize = true) {
     if (!this.containerDiv || !this.containerDiv.parentElement || !this.graphicPiano) return;
     const parentContainer = this.containerDiv.parentElement;
     const containerWidth = parentContainer.offsetWidth;
@@ -189,12 +189,28 @@ class Piano {
     const keyCenterX = keyData.bbox.position[0] + keyData.bbox.size[0] / 2;
     const svgWidth = parseFloat(this.containerDiv.style.width) || containerWidth;
 
-    let leftOffset = containerWidth / 2 - keyCenterX;
     if (svgWidth <= containerWidth) {
-      leftOffset = (containerWidth - svgWidth) / 2;
+      this.containerDiv.style.transition = 'left 0.35s ease';
+      this.containerDiv.style.left = `${(containerWidth - svgWidth) / 2}px`;
+      return;
+    }
+
+    const minOffset = containerWidth - svgWidth;
+    const maxOffset = 0;
+    const pad = Math.min(80, containerWidth * 0.15);
+
+    const rangeMin = Math.max(minOffset, pad - keyCenterX);
+    const rangeMax = Math.min(maxOffset, containerWidth - pad - keyCenterX);
+
+    let leftOffset;
+    if (rangeMin <= rangeMax) {
+      if (randomize) {
+        leftOffset = rangeMin + Math.random() * (rangeMax - rangeMin);
+      } else {
+        leftOffset = (rangeMin + rangeMax) / 2;
+      }
     } else {
-      const minOffset = containerWidth - svgWidth;
-      leftOffset = Math.max(minOffset, Math.min(0, leftOffset));
+      leftOffset = Math.max(minOffset, Math.min(maxOffset, containerWidth / 2 - keyCenterX));
     }
 
     this.containerDiv.style.transition = 'left 0.35s ease';
