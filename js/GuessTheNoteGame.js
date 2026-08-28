@@ -61,6 +61,7 @@ class GuessTheNoteGame {
     this.piano = new Piano();
     this.pianoDivElement.appendChild(this.piano.getContainer());
     this.piano.setGameInstance(this);
+    this.piano.setMiddleCMarkerVisibility(true);
     this.pianoPositioner.update();
 
     this.instrumentSelector = new InstrumentSelector(this);
@@ -77,18 +78,17 @@ class GuessTheNoteGame {
     this.gameMode = newMode;
     this.stopRound();
     this.scoreBox.reset();
+    this.piano.setMiddleCMarkerVisibility(true);
 
     if (newMode === 'STAFF_READING') {
       if (this.keySelector && this.keySelector.toggleButton) {
         this.keySelector.toggleButton.style.display = 'none';
       }
-      this.piano.setMiddleCMarkerVisibility(true);
       this.gameBox.setFeedbackText('play the note...');
     } else {
       if (this.keySelector && this.keySelector.toggleButton) {
         this.keySelector.toggleButton.style.display = 'flex';
       }
-      this.piano.setMiddleCMarkerVisibility(false);
       this.gameBox.setFeedbackText('guess the note...');
     }
     this.updateUI();
@@ -175,7 +175,6 @@ class GuessTheNoteGame {
     const minStaffMidi = 38; // D2
     const maxStaffMidi = 81; // A5
 
-    // Enharmonic chromatic map: each semitone supports both sharp and flat spellings
     const chromaticEnharmonics = {
       0: [{ name: 'C', accidental: '' }],
       1: [
@@ -212,7 +211,6 @@ class GuessTheNoteGame {
     const pitchClass = chosenMidi % 12;
     const octave = Math.floor((chosenMidi - 12) / 12);
     const enharmonicOptions = chromaticEnharmonics[pitchClass];
-    // 50/50 random selection between sharp and flat for chromatic pitches
     const selectedSpelling = enharmonicOptions[Math.floor(Math.random() * enharmonicOptions.length)];
 
     const pitchName = `${selectedSpelling.name}${octave}`;

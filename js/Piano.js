@@ -32,8 +32,8 @@ class Piano {
       endMidi: this.settings.gameEndMidi,
     };
 
-    this.middleCIndicator = null;
-    this.showMiddleCMarker = false;
+    this.cOctaveIndicators = [];
+    this.showMiddleCMarker = true;
   }
 
   createContainerDiv() {
@@ -60,52 +60,55 @@ class Piano {
   }
 
   setupMiddleCMarker() {
-    if (this.middleCIndicator && this.middleCIndicator.parentElement) {
-      this.middleCIndicator.remove();
+    if (this.cOctaveIndicators && this.cOctaveIndicators.length > 0) {
+      this.cOctaveIndicators.forEach((el) => {
+        if (el && el.parentElement) el.remove();
+      });
     }
+    this.cOctaveIndicators = [];
 
-    const keyData = this.graphicPiano?.getKeyByMidi?.(60);
-    if (!keyData || !keyData.bbox) return;
+    const fullStart = this.settings.fullStartMidi;
+    const fullEnd = this.settings.fullEndMidi;
 
-    this.middleCIndicator = makeElement('div', {
-      className: 'middle-c-marker',
-      title: 'Middle C (C4)',
-      style: {
-        position: 'absolute',
-        zIndex: '15',
-        pointerEvents: 'none',
-        display: this.showMiddleCMarker ? 'flex' : 'none',
-        flexDirection: 'column',
-        alignItems: 'center',
-        opacity: '0.85',
-        transition: 'opacity 0.2s ease',
+    for (let midi = fullStart; midi <= fullEnd; midi++) {
+      if (midi % 12 === 0) {
+        const octave = Math.floor((midi - 12) / 12);
+        const keyData = this.graphicPiano?.getKeyByMidi?.(midi);
+        if (!keyData || !keyData.bbox) continue;
+
+        const indicator = makeElement('div', {
+          className: 'c-octave-marker',
+          textContent: String(octave),
+          title: `C${octave}`,
+          style: {
+            position: 'absolute',
+            zIndex: '25',
+            pointerEvents: 'none',
+            display: this.showMiddleCMarker ? 'block' : 'none',
+            height: '22px',
+            lineHeight: '22px',
+            fontSize: '20px',
+            fontWeight: 'bold',
+            color: 'rgba(0, 0, 0, 0.55)',
+            fontFamily: '"Architects Daughter", Arial, sans-serif',
+            textAlign: 'center',
+            userSelect: 'none',
+            textShadow: '0 1px 2px rgba(255, 255, 255, 0.95), 0 0 1px #fff',
+          },
+        });
+
+        this.addOverlayElement(midi, indicator, { bottomOffset: 4 });
+        this.cOctaveIndicators.push(indicator);
       }
-    }, [
-      makeElement('div', {
-        textContent: '▲',
-        style: { fontSize: '11px', color: '#00f2fe', lineHeight: '1', textShadow: '0 0 4px #00f2fe' }
-      }),
-      makeElement('div', {
-        textContent: 'C4',
-        style: {
-          fontSize: '9px',
-          fontWeight: 'bold',
-          color: '#ffffff',
-          background: 'rgba(0, 180, 255, 0.75)',
-          padding: '1px 3px',
-          borderRadius: '3px',
-          fontFamily: 'system-ui, -apple-system, sans-serif'
-        }
-      })
-    ]);
-
-    this.addOverlayElement(60, this.middleCIndicator, { bottomOffset: 30 });
+    }
   }
 
   setMiddleCMarkerVisibility(visible) {
     this.showMiddleCMarker = visible;
-    if (this.middleCIndicator) {
-      this.middleCIndicator.style.display = visible ? 'flex' : 'none';
+    if (this.cOctaveIndicators && this.cOctaveIndicators.length > 0) {
+      this.cOctaveIndicators.forEach((indicator) => {
+        if (indicator) indicator.style.display = visible ? 'block' : 'none';
+      });
     } else if (visible) {
       this.setupMiddleCMarker();
     }
@@ -151,8 +154,9 @@ class Piano {
     if (!skipInit) {
       this.graphicPiano.updateSize(svgWidth, svgHeight);
       this.glowPiano.initialize();
-      this.setupMiddleCMarker();
     }
+
+    this.setupMiddleCMarker();
 
     let gameRangeWhiteKeyCountBefore = 0;
     for (let m = this.settings.fullStartMidi; m < this.gameRange.startMidi; m++) {
@@ -186,7 +190,10 @@ class Piano {
     const keyData = this.graphicPiano.getKeyByMidi ? this.graphicPiano.getKeyByMidi(midi) : null;
     if (!keyData || !keyData.bbox) return;
 
-    const keyCenterX = keyData.bbox.position[0] + keyData.bbox.size[0] / 2;
+    const keyLeft = keyData.bbox.position[0];
+    const keyWidth = keyData.bbox.size[0];
+    const keyRight = keyLeft + keyWidth;
+    const keyCenterX = keyLeft + keyWidth / 2;
     const svgWidth = parseFloat(this.containerDiv.style.width) || containerWidth;
 
     if (svgWidth <= containerWidth) {
@@ -197,21 +204,34 @@ class Piano {
 
     const minOffset = containerWidth - svgWidth;
     const maxOffset = 0;
-    const pad = Math.min(80, containerWidth * 0.15);
+    const currentOffset = parseFloat(this.containerDiv.style.left) || 0;
+    const margin = Math.min(40, containerWidth * 0.1);
 
-    const rangeMin = Math.max(minOffset, pad - keyCenterX);
-    const rangeMax = Math.min(maxOffset, containerWidth - pad - keyCenterX);
+    const visibleLeft = -currentOffset;
+    const visibleRight = -currentOffset + containerWidth;
+    if (keyLeft >= visibleLeft + margin && keyRight <= visibleRight - margin) {
+      return;
+    }
+
+    const offsetCenter = Math.max(minOffset, Math.min(maxOffset, containerWidth / 2 - keyCenterX));
+
+    let offsetMin;
+    if (keyLeft < visibleLeft + margin) {
+      offsetMin = margin - keyLeft;
+    } else {
+      offsetMin = containerWidth - margin - keyRight;
+    }
+    offsetMin = Math.max(minOffset, Math.min(maxOffset, offsetMin));
 
     let leftOffset;
-    if (rangeMin <= rangeMax) {
-      if (randomize) {
-        leftOffset = rangeMin + Math.random() * (rangeMax - rangeMin);
-      } else {
-        leftOffset = (rangeMin + rangeMax) / 2;
-      }
+    if (randomize) {
+      const t = Math.random();
+      leftOffset = offsetMin + t * (offsetCenter - offsetMin);
     } else {
-      leftOffset = Math.max(minOffset, Math.min(maxOffset, containerWidth / 2 - keyCenterX));
+      leftOffset = offsetCenter;
     }
+
+    leftOffset = Math.max(minOffset, Math.min(maxOffset, leftOffset));
 
     this.containerDiv.style.transition = 'left 0.35s ease';
     this.containerDiv.style.left = `${leftOffset}px`;
@@ -247,7 +267,7 @@ class Piano {
     element.style.left = `${x + width / 2}px`;
     element.style.transform = 'translateX(-50%)';
     element.style.pointerEvents = 'none';
-    element.style.zIndex = '10';
+    element.style.zIndex = '25';
     element.style.fontFamily = '"Architects Daughter", Arial, sans-serif';
 
     const elementHeight =
