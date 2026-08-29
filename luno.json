@@ -1,6 +1,6 @@
 {
   "name": "guessTheNoteGame",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Musical pitch and note identification game with ear training and staff sight-reading modes",
   "type": "luno-web-app",
   "mainClass": "GuessTheNoteGame",
@@ -13,6 +13,7 @@
     "js/PianoUtils.js",
     "js/KeySignatureSelector.js",
     "js/InstrumentSelector.js",
+    "js/MiniPianoMap.js",
     "js/ScoreBox.js",
     "js/StaffView.js",
     "js/Piano.js",
@@ -31,30 +32,14 @@
     "sound_engines/WafPlayer.js"
   ],
   "styles": [],
-  "processedCountSinceCheckpoint": 5,
-  "changedMethods": {
-    "guessTheNoteGame/files.json": "2026-08-25T02:14:23.339Z",
-    "guessTheNoteGame/luno.json": "2026-08-25T02:14:23.339Z",
-    "guessTheNoteGame/js/PianoUtils.js": "2026-08-25T02:14:23.339Z",
-    "guessTheNoteGame/js/StaffView.js": "2026-08-29T06:52:50.641Z",
-    "guessTheNoteGame/js/GameBox.js": "2026-08-28T10:48:05.982Z",
-    "guessTheNoteGame/js/Piano.js": "2026-08-28T20:39:50.213Z",
-    "guessTheNoteGame/js/GuessTheNoteGame.js": "2026-08-29T06:33:55.909Z",
-    "Library/ThreeJSLoader.js": "2026-08-25T13:43:47.665Z",
-    "guessTheNoteGame/js/ScoreBox.js": "2026-08-26T23:39:07.699Z",
-    "guessTheNoteGame/js/InstrumentSelector.js": "2026-08-28T06:53:22.617Z",
-    "guessTheNoteGame/resources/instruments.svg": "2026-08-28T06:53:22.617Z",
-    "Luno/core/LunoServer.js": "2026-08-28T06:04:06.774Z",
-    "Luno/app/LunoManifestDecisionEngine.js": "2026-08-28T06:04:06.774Z",
-    "Luno/core/LunoClassPatcher.js": "2026-08-28T06:04:06.774Z",
-    "guessTheNoteGame/index.html": "2026-08-28T06:07:06.236Z",
-    "guessTheNoteGame/js/KeySignatureSelector.js": "2026-08-28T06:53:22.617Z",
-    "guessTheNoteGame/library/GlowPiano.js": "2026-08-28T11:11:50.959Z",
-    "Library/GlowPiano.js": "2026-08-28T10:22:12.126Z",
-    "Library/GlowPiano.js.bak": "2026-08-28T10:22:12.126Z",
-    "LunoPatchLog.html": "2026-08-28T10:22:12.126Z",
-    "guessTheNoteGame/library/GraphicPiano.js": "2026-08-28T11:11:50.959Z"
-  },
+  "processedCountSinceCheckpoint": 11,
   "lastCheckpointTime": "2026-08-29T06:28:14.756Z",
-  "pendingCheckpointDescription": "Clean working tree"
+  "pendingCheckpointDescription": "Clean working tree",
+  "changedMethods": {
+    "guessTheNoteGame/files.json": "2026-08-29T18:59:22.045Z",
+    "guessTheNoteGame/luno.json": "2026-08-29T18:59:22.045Z",
+    "guessTheNoteGame/js/MiniPianoMap.js": "2026-08-29T18:59:22.045Z",
+    "guessTheNoteGame/js/Piano.js": "2026-08-29T19:00:30.039Z",
+    "guessTheNoteGame/js/GuessTheNoteGame.js": "2026-08-29T19:02:27.872Z"
+  }
 }

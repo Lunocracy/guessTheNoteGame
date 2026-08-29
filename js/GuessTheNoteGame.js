@@ -68,6 +68,28 @@ class GuessTheNoteGame {
     this.piano.setMiddleCMarkerVisibility(true);
     this.pianoPositioner.update();
 
+    // Initialize Mini Piano Map for portrait Staff Reading overview
+    this.miniPianoMap = new MiniPianoMap({
+      startMidi: this.piano.settings.fullStartMidi,
+      endMidi: this.piano.settings.fullEndMidi,
+    });
+    this.rootElement.appendChild(this.miniPianoMap.getContainer());
+
+    this.miniPianoPositioner = new SmartElementPositioner(this.miniPianoMap.getContainer(), {
+      container: this.rootElement,
+      position: [7.5, 72.2],
+      size: [85, 4.2],
+      sizeCallback: (self, pixelDims) => {
+        if (this.miniPianoMap && pixelDims.width > 0 && pixelDims.height > 0) {
+          this.miniPianoMap.setSize(pixelDims.width, pixelDims.height);
+          if (this.piano) {
+            const { startFraction, endFraction } = this.piano.getViewportFraction();
+            this.miniPianoMap.setViewport(startFraction, endFraction);
+          }
+        }
+      },
+    });
+
     this.instrumentSelector = new InstrumentSelector(this);
     this.instrumentSelector.start();
 
@@ -78,6 +100,25 @@ class GuessTheNoteGame {
     this.updateUI();
   }
 
+  updateMiniPianoVisibility() {
+    if (!this.miniPianoMap) return;
+    const isPortrait = this.rootElement
+      ? this.rootElement.clientHeight > this.rootElement.clientWidth
+      : window.innerHeight > window.innerWidth;
+    const shouldShow = (this.gameMode === 'STAFF_READING') && isPortrait;
+
+    if (shouldShow) {
+      this.miniPianoMap.show();
+      if (this.miniPianoPositioner) this.miniPianoPositioner.update();
+      if (this.piano) {
+        const { startFraction, endFraction } = this.piano.getViewportFraction();
+        this.miniPianoMap.setViewport(startFraction, endFraction);
+      }
+    } else {
+      this.miniPianoMap.hide();
+    }
+  }
+
   handleRainbowModeChange(rainbowMode) {
     const isMonochrome = (rainbowMode === 'NONE');
     if (this.piano) {
@@ -86,6 +127,7 @@ class GuessTheNoteGame {
         this.piano.centerOnMidi(this.targetStaffNote.midi, false);
       }
     }
+    this.updateMiniPianoVisibility();
   }
 
   handleModeChange(newMode) {
@@ -108,6 +150,12 @@ class GuessTheNoteGame {
       this.gameBox.setFeedbackText('guess the note...');
       this.piano.setMonochrome(false);
     }
+
+    if (this.pianoDivElement && this.pianoPositioner) {
+      this.pianoPositioner.update();
+    }
+
+    this.updateMiniPianoVisibility();
     this.updateUI();
   }
 
@@ -150,6 +198,7 @@ class GuessTheNoteGame {
 
   updateUI() {
     this.gameBox.updateUI(this.state);
+    this.updateMiniPianoVisibility();
   }
 
   stopRound() {
@@ -161,7 +210,8 @@ class GuessTheNoteGame {
     this.state = this.States.IDLE;
     this.currentSequence = [];
     this.targetStaffNote = null;
-    this.gameBox.getPromptDiv().classList.remove('correct', 'incorrect', 'pulse-green', 'pulse-red');
+    const promptDiv = this.gameBox.getPromptDiv();
+    if (promptDiv) promptDiv.classList.remove('correct', 'incorrect', 'pulse-green', 'pulse-red');
     this.gameBox.setFeedbackText(
       this.gameMode === 'STAFF_READING' ? 'play the note...' : 'guess the note...'
     );
@@ -1012,6 +1062,7 @@ class GuessTheNoteGame {
       if (this.scoreBox && this.scoreBox.positioner) this.scoreBox.positioner.update();
       if (this.gameBox && this.gameBox.positioner) this.gameBox.positioner.update();
       if (this.pianoPositioner) this.pianoPositioner.update();
+      if (this.miniPianoPositioner) this.miniPianoPositioner.update();
       if (this.instrumentSelector && this.instrumentSelector.positioner) {
         this.instrumentSelector.positioner.update();
         this.instrumentSelector.popupPositioner.update();
@@ -1020,6 +1071,7 @@ class GuessTheNoteGame {
         this.keySelector.buttonPositioner.update();
         this.keySelector.popupPositioner.update();
       }
+      this.updateMiniPianoVisibility();
     });
     this.resizeObserver.observe(this.rootElement);
   }

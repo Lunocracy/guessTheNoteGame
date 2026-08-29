@@ -35,6 +35,23 @@ class Piano {
 
     this.cOctaveIndicators = [];
     this.showMiddleCMarker = true;
+    this.onViewportChange = null;
+  }
+
+  isPortraitOrientation() {
+    if (this.gameInstance && this.gameInstance.rootElement) {
+      const root = this.gameInstance.rootElement;
+      return root.clientHeight > root.clientWidth;
+    }
+    return window.innerHeight > window.innerWidth;
+  }
+
+  isPortraitStaffMode() {
+    return (
+      this.gameInstance &&
+      this.gameInstance.gameMode === 'STAFF_READING' &&
+      this.isPortraitOrientation()
+    );
   }
 
   setMonochrome(isMonochrome) {
@@ -169,6 +186,33 @@ class Piano {
     }
   }
 
+  getViewportFraction() {
+    if (!this.containerDiv || !this.containerDiv.parentElement) {
+      return { startFraction: 0.35, endFraction: 0.65 };
+    }
+    const containerWidth = this.containerDiv.parentElement.offsetWidth;
+    const svgWidth = parseFloat(this.containerDiv.style.width) || containerWidth;
+    const currentLeft = parseFloat(this.containerDiv.style.left) || 0;
+
+    if (svgWidth <= containerWidth) {
+      return { startFraction: 0, endFraction: 1 };
+    }
+
+    const visibleLeftPx = -currentLeft;
+    const visibleRightPx = visibleLeftPx + containerWidth;
+
+    const startFraction = Math.max(0, Math.min(1, visibleLeftPx / svgWidth));
+    const endFraction = Math.max(0, Math.min(1, visibleRightPx / svgWidth));
+    return { startFraction, endFraction };
+  }
+
+  notifyViewportChanged() {
+    if (this.onViewportChange) {
+      const { startFraction, endFraction } = this.getViewportFraction();
+      this.onViewportChange(startFraction, endFraction);
+    }
+  }
+
   setSizeAndPosition(containerWidth, containerHeight, skipInit, preserveOffset = false) {
     if (!containerWidth || !containerHeight) return;
 
@@ -179,29 +223,42 @@ class Piano {
       if (!isBlack) totalWhiteKeys++;
     }
 
-    let targetKeyWidth = containerHeight * 0.22;
-    let visibleWhiteKeys = containerWidth / targetKeyWidth;
+    const isPortraitStaff = this.isPortraitStaffMode();
 
-    let gameRangeWhiteKeys = 0;
-    for (let m = this.gameRange.startMidi; m <= this.gameRange.endMidi; m++) {
-      const isBlack = [1, 3, 6, 8, 10].includes(m % 12);
-      if (!isBlack) gameRangeWhiteKeys++;
-    }
+    let targetKeyWidth;
+    let svgHeight;
 
-    const minVisible = Math.max(7, gameRangeWhiteKeys);
+    if (isPortraitStaff) {
+      // Scale down keys to display ~9.5 white keys (~1.35 octaves) and compress height to 85%
+      const portraitVisibleWhite = 9.5;
+      targetKeyWidth = containerWidth / portraitVisibleWhite;
+      svgHeight = containerHeight * 0.85;
+    } else {
+      // Standard desktop/landscape & Ear Training mode calculations
+      targetKeyWidth = containerHeight * 0.22;
+      let visibleWhiteKeys = containerWidth / targetKeyWidth;
 
-    if (visibleWhiteKeys < minVisible) {
-      visibleWhiteKeys = minVisible;
-      targetKeyWidth = containerWidth / visibleWhiteKeys;
-    } else if (visibleWhiteKeys > totalWhiteKeys) {
-      visibleWhiteKeys = totalWhiteKeys;
-      const maxKeyWidth = containerHeight * 0.30;
-      const fillWidth = containerWidth / totalWhiteKeys;
-      targetKeyWidth = Math.min(maxKeyWidth, fillWidth);
+      let gameRangeWhiteKeys = 0;
+      for (let m = this.gameRange.startMidi; m <= this.gameRange.endMidi; m++) {
+        const isBlack = [1, 3, 6, 8, 10].includes(m % 12);
+        if (!isBlack) gameRangeWhiteKeys++;
+      }
+
+      const minVisible = Math.max(7, gameRangeWhiteKeys);
+
+      if (visibleWhiteKeys < minVisible) {
+        visibleWhiteKeys = minVisible;
+        targetKeyWidth = containerWidth / visibleWhiteKeys;
+      } else if (visibleWhiteKeys > totalWhiteKeys) {
+        visibleWhiteKeys = totalWhiteKeys;
+        const maxKeyWidth = containerHeight * 0.30;
+        const fillWidth = containerWidth / totalWhiteKeys;
+        targetKeyWidth = Math.min(maxKeyWidth, fillWidth);
+      }
+      svgHeight = containerHeight;
     }
 
     const svgWidth = targetKeyWidth * totalWhiteKeys;
-    const svgHeight = containerHeight;
 
     this.containerDiv.style.width = `${svgWidth}px`;
     this.containerDiv.style.height = `${svgHeight}px`;
@@ -226,6 +283,7 @@ class Piano {
           const maxOffset = 0;
           this.containerDiv.style.left = `${Math.max(minOffset, Math.min(maxOffset, currentOffset))}px`;
         }
+        this.notifyViewportChanged();
         return;
       }
     }
@@ -239,6 +297,12 @@ class Piano {
     for (let m = this.settings.fullStartMidi; m < this.gameRange.startMidi; m++) {
       const isBlack = [1, 3, 6, 8, 10].includes(m % 12);
       if (!isBlack) gameRangeWhiteKeyCountBefore++;
+    }
+
+    let gameRangeWhiteKeys = 0;
+    for (let m = this.gameRange.startMidi; m <= this.gameRange.endMidi; m++) {
+      const isBlack = [1, 3, 6, 8, 10].includes(m % 12);
+      if (!isBlack) gameRangeWhiteKeys++;
     }
 
     const startPixel = gameRangeWhiteKeyCountBefore * targetKeyWidth;
@@ -256,6 +320,7 @@ class Piano {
     }
 
     this.containerDiv.style.left = `${leftOffset}px`;
+    this.notifyViewportChanged();
   }
 
   centerOnMidi(midi, randomize = true) {
@@ -276,6 +341,7 @@ class Piano {
     if (svgWidth <= containerWidth) {
       this.containerDiv.style.transition = 'left 0.35s ease';
       this.containerDiv.style.left = `${(containerWidth - svgWidth) / 2}px`;
+      this.notifyViewportChanged();
       return;
     }
 
@@ -287,6 +353,7 @@ class Piano {
     const visibleLeft = -currentOffset;
     const visibleRight = -currentOffset + containerWidth;
     if (keyLeft >= visibleLeft + margin && keyRight <= visibleRight - margin) {
+      this.notifyViewportChanged();
       return;
     }
 
@@ -312,6 +379,7 @@ class Piano {
 
     this.containerDiv.style.transition = 'left 0.35s ease';
     this.containerDiv.style.left = `${leftOffset}px`;
+    this.notifyViewportChanged();
   }
 
   setGameRange(startMidi, endMidi) {
