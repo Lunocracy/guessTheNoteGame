@@ -31,15 +31,15 @@
     "sound_engines/WafPlayer.js"
   ],
   "styles": [],
-  "processedCountSinceCheckpoint": 0,
+  "processedCountSinceCheckpoint": 2,
   "changedMethods": {
     "guessTheNoteGame/files.json": "2026-08-25T02:14:23.339Z",
     "guessTheNoteGame/luno.json": "2026-08-25T02:14:23.339Z",
     "guessTheNoteGame/js/PianoUtils.js": "2026-08-25T02:14:23.339Z",
-    "guessTheNoteGame/js/StaffView.js": "2026-08-29T06:27:46.321Z",
+    "guessTheNoteGame/js/StaffView.js": "2026-08-29T06:33:55.909Z",
     "guessTheNoteGame/js/GameBox.js": "2026-08-28T10:48:05.982Z",
     "guessTheNoteGame/js/Piano.js": "2026-08-28T20:39:50.213Z",
-    "guessTheNoteGame/js/GuessTheNoteGame.js": "2026-08-28T20:39:50.213Z",
+    "guessTheNoteGame/js/GuessTheNoteGame.js": "2026-08-29T06:33:55.909Z",
     "Library/ThreeJSLoader.js": "2026-08-25T13:43:47.665Z",
     "guessTheNoteGame/js/ScoreBox.js": "2026-08-26T23:39:07.699Z",
     "guessTheNoteGame/js/InstrumentSelector.js": "2026-08-28T06:53:22.617Z",

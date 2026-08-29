@@ -1039,164 +1039,171 @@ class GuessTheNoteGame {
   }
 
   injectStyles() {
-    applyCss(`
-      html, body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-      }
-
-      .v-modal {
-        position: absolute;
-        background: rgba(18, 18, 28, 0.96) !important;
-        backdrop-filter: blur(14px) !important;
-        -webkit-backdrop-filter: blur(14px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.18) !important;
-        border-radius: 16px !important;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7) !important;
-        color: white !important;
-        padding: 24px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: space-between;
-        font-family: 'Architects Daughter', Arial, sans-serif !important;
-        animation: modalFadeIn 0.2s ease-out;
-      }
-      
-      @keyframes modalFadeIn {
-        from { opacity: 0; transform: scale(0.96); }
-        to { opacity: 1; transform: scale(1); }
-      }
-
-      .v-btn {
-        font-family: 'Architects Daughter', Arial, sans-serif !important;
-        font-size: 18px;
-        padding: 10px 24px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        outline: none;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-      }
-      .v-btn:hover {
-        background: rgba(255, 255, 255, 0.18);
-        border-color: rgba(255, 255, 255, 0.4);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-      }
-      .v-btn:active { transform: translateY(0); }
-      
-      .v-btn-primary { background: #007acc; border-color: #009cf7; }
-      .v-btn-primary:hover { background: #0094f7; box-shadow: 0 0 15px rgba(0, 156, 247, 0.4); }
-      .v-btn-success { background: #2e7d32; border-color: #4caf50; }
-      .v-btn-success:hover { background: #388e3c; box-shadow: 0 0 15px rgba(76, 175, 80, 0.4); }
-      .v-btn-danger { background: #c62828; border-color: #e53935; }
-      .v-btn-danger:hover { background: #d32f2f; box-shadow: 0 0 15px rgba(229, 57, 53, 0.4); }
-
-      .v-btn-mode {
-        background: transparent;
-        border: none;
-        color: #94a3b8;
-        padding: 5px 12px;
-        font-size: 13px;
-        font-family: 'Architects Daughter', Arial, sans-serif !important;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        outline: none;
-      }
-      .v-btn-mode:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
-      .v-btn-mode.active { background: #0284c7; color: #fff; font-weight: bold; }
-
-      .guess-the-note-wrapper {
-        background-color: #a0a0a0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        position: relative;
-        top: 0;
-        left: 0;
-        transition: background-color 0.5s ease-in-out;
-      }
-      .guess-the-note-wrapper svg.piano-svg {
-        display: block;
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: 0; 
-      }
-      .guess-the-note-wrapper .white-key, .guess-the-note-wrapper .black-key {
-        transition: fill 0.2s ease, stroke 0.2s ease;
-        pointer-events: all;
-      }
-      .guess-the-note-wrapper .pulse { animation: pulse 0.5s ease-out; }
-      @keyframes pulse { 0% { transform: scale(1); } 20% { transform: scale(1.6); } 100% { transform: scale(1); } }
-      .guess-the-note-wrapper .feedbackText { margin: 0.5vh; font-size: 20px; color: #fff; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
-      .guess-the-note-wrapper .noteDisplay { display: flex; justify-content: center; gap: 20px; margin: 0.5vh; }
-      .guess-the-note-wrapper .noteDisplay span { width: 100px; text-align: center; visibility: hidden; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); display: inline-block; white-space: nowrap; }
-      
-      .guess-the-note-wrapper #startButton {
-        font-family: 'Architects Daughter', Arial, sans-serif !important;
-        background: #007acc !important;
-        border: 2px solid #009cf7 !important;
-        border-radius: 12px !important;
-        color: #fff !important;
-        font-weight: bold !important;
-        cursor: pointer;
-        transition: all 0.2s ease !important;
-        outline: none;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important;
-      }
-      .guess-the-note-wrapper #startButton:hover {
-        background: #0094f7 !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 12px rgba(0, 156, 247, 0.4) !important;
-      }
-
-      .guess-the-note-wrapper #startTwoPlayerButton {
-        font-family: 'Architects Daughter', Arial, sans-serif !important;
-        background: #2e7d32 !important;
-        border: 2px solid #4caf50 !important;
-        border-radius: 12px !important;
-        color: #fff !important;
-        font-weight: bold !important;
-        cursor: pointer;
-        transition: all 0.2s ease !important;
-        outline: none;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important;
-      }
-
-      .guess-the-note-wrapper #playAgainButton {
-        font-family: 'Architects Daughter', Arial, sans-serif !important;
-        background: rgba(255, 255, 255, 0.12) !important;
-        border: 2px solid rgba(255, 255, 255, 0.25) !important;
-        border-radius: 10px !important;
-        color: #fff !important;
-        cursor: pointer;
-        outline: none;
-      }
-
-      @keyframes pulseGreenPrompt { 0% { background-color: rgba(0, 0, 0, 0.75); } 8% { background-color: rgba(33, 190, 33, 0.92); } 100% { background-color: rgba(0, 0, 0, 0.75); } }
-      @keyframes pulseRedPrompt { 0% { background-color: rgba(0, 0, 0, 0.75); } 20% { background-color: rgba(150, 33, 33, 0.92); } 100% { background-color: rgba(0, 0, 0, 0.75); } }
-      .guess-the-note-wrapper .game-box.pulse-green { animation: pulseGreenPrompt 1.2s ease-out 1 !important; }
-      .guess-the-note-wrapper .game-box.pulse-red { animation: pulseRedPrompt 0.8s ease-out 1 !important; }
-      @keyframes pulseOverlay { 0% { transform: scale(1) translateX(-50%); opacity: 1; } 50% { transform: scale(1.6) translateX(-50%); opacity: 0.8; } 100% { transform: scale(1) translateX(-50%); opacity: 1; } }
-      .guess-the-note-wrapper .pulse-overlay { animation: pulseOverlay 0.5s ease-out; transform-origin: center center; }
-    `, 'guess-the-note-styles');
-  }
+      applyCss(`
+        @font-face {
+          font-family: 'Bravura';
+          src: url('https://cdn.jsdelivr.net/gh/steinbergmedia/bravura@master/redist/woff/BravuraText.woff') format('woff'),
+               url('https://cdn.jsdelivr.net/gh/steinbergmedia/bravura@master/redist/otf/BravuraText.otf') format('opentype');
+          font-display: swap;
+        }
+  
+        html, body {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+        }
+  
+        .v-modal {
+          position: absolute;
+          background: rgba(18, 18, 28, 0.96) !important;
+          backdrop-filter: blur(14px) !important;
+          -webkit-backdrop-filter: blur(14px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.18) !important;
+          border-radius: 16px !important;
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7) !important;
+          color: white !important;
+          padding: 24px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          font-family: 'Architects Daughter', Arial, sans-serif !important;
+          animation: modalFadeIn 0.2s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+          from { opacity: 0; transform: scale(0.96); }
+          to { opacity: 1; transform: scale(1); }
+        }
+  
+        .v-btn {
+          font-family: 'Architects Daughter', Arial, sans-serif !important;
+          font-size: 18px;
+          padding: 10px 24px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          color: white;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          outline: none;
+          text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .v-btn:hover {
+          background: rgba(255, 255, 255, 0.18);
+          border-color: rgba(255, 255, 255, 0.4);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        .v-btn:active { transform: translateY(0); }
+        
+        .v-btn-primary { background: #007acc; border-color: #009cf7; }
+        .v-btn-primary:hover { background: #0094f7; box-shadow: 0 0 15px rgba(0, 156, 247, 0.4); }
+        .v-btn-success { background: #2e7d32; border-color: #4caf50; }
+        .v-btn-success:hover { background: #388e3c; box-shadow: 0 0 15px rgba(76, 175, 80, 0.4); }
+        .v-btn-danger { background: #c62828; border-color: #e53935; }
+        .v-btn-danger:hover { background: #d32f2f; box-shadow: 0 0 15px rgba(229, 57, 53, 0.4); }
+  
+        .v-btn-mode {
+          background: transparent;
+          border: none;
+          color: #94a3b8;
+          padding: 5px 12px;
+          font-size: 13px;
+          font-family: 'Architects Daughter', Arial, sans-serif !important;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          outline: none;
+        }
+        .v-btn-mode:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+        .v-btn-mode.active { background: #0284c7; color: #fff; font-weight: bold; }
+  
+        .guess-the-note-wrapper {
+          background-color: #a0a0a0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          position: relative;
+          top: 0;
+          left: 0;
+          transition: background-color 0.5s ease-in-out;
+        }
+        .guess-the-note-wrapper svg.piano-svg {
+          display: block;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0; 
+        }
+        .guess-the-note-wrapper .white-key, .guess-the-note-wrapper .black-key {
+          transition: fill 0.2s ease, stroke 0.2s ease;
+          pointer-events: all;
+        }
+        .guess-the-note-wrapper .pulse { animation: pulse 0.5s ease-out; }
+        @keyframes pulse { 0% { transform: scale(1); } 20% { transform: scale(1.6); } 100% { transform: scale(1); } }
+        .guess-the-note-wrapper .feedbackText { margin: 0.5vh; font-size: 20px; color: #fff; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
+        .guess-the-note-wrapper .noteDisplay { display: flex; justify-content: center; gap: 20px; margin: 0.5vh; }
+        .guess-the-note-wrapper .noteDisplay span { width: 100px; text-align: center; visibility: hidden; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); display: inline-block; white-space: nowrap; }
+        
+        .guess-the-note-wrapper #startButton {
+          font-family: 'Architects Daughter', Arial, sans-serif !important;
+          background: #007acc !important;
+          border: 2px solid #009cf7 !important;
+          border-radius: 12px !important;
+          color: #fff !important;
+          font-weight: bold !important;
+          cursor: pointer;
+          transition: all 0.2s ease !important;
+          outline: none;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important;
+        }
+        .guess-the-note-wrapper #startButton:hover {
+          background: #0094f7 !important;
+          transform: translateY(-2px) !important;
+          box-shadow: 0 6px 12px rgba(0, 156, 247, 0.4) !important;
+        }
+  
+        .guess-the-note-wrapper #startTwoPlayerButton {
+          font-family: 'Architects Daughter', Arial, sans-serif !important;
+          background: #2e7d32 !important;
+          border: 2px solid #4caf50 !important;
+          border-radius: 12px !important;
+          color: #fff !important;
+          font-weight: bold !important;
+          cursor: pointer;
+          transition: all 0.2s ease !important;
+          outline: none;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.2) !important;
+        }
+  
+        .guess-the-note-wrapper #playAgainButton {
+          font-family: 'Architects Daughter', Arial, sans-serif !important;
+          background: rgba(255, 255, 255, 0.12) !important;
+          border: 2px solid rgba(255, 255, 255, 0.25) !important;
+          border-radius: 10px !important;
+          color: #fff !important;
+          cursor: pointer;
+          outline: none;
+        }
+  
+        @keyframes pulseGreenPrompt { 0% { background-color: rgba(0, 0, 0, 0.75); } 8% { background-color: rgba(33, 190, 33, 0.92); } 100% { background-color: rgba(0, 0, 0, 0.75); } }
+        @keyframes pulseRedPrompt { 0% { background-color: rgba(0, 0, 0, 0.75); } 20% { background-color: rgba(150, 33, 33, 0.92); } 100% { background-color: rgba(0, 0, 0, 0.75); } }
+        .guess-the-note-wrapper .game-box.pulse-green { animation: pulseGreenPrompt 1.2s ease-out 1 !important; }
+        .guess-the-note-wrapper .game-box.pulse-red { animation: pulseRedPrompt 0.8s ease-out 1 !important; }
+        @keyframes pulseOverlay { 0% { transform: scale(1) translateX(-50%); opacity: 1; } 50% { transform: scale(1.6) translateX(-50%); opacity: 0.8; } 100% { transform: scale(1) translateX(-50%); opacity: 1; } }
+        .guess-the-note-wrapper .pulse-overlay { animation: pulseOverlay 0.5s ease-out; transform-origin: center center; }
+      `, 'guess-the-note-styles');
+    }
 }
 
 globalThis.GuessTheNoteGame = GuessTheNoteGame;
