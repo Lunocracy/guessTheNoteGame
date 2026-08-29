@@ -38,7 +38,11 @@ class GuessTheNoteGame {
     this.scoreBox = new ScoreBox(this.rootElement);
 
     this.gameBox = new GameBox();
-    this.gameBox.start(this.rootElement, (newMode) => this.handleModeChange(newMode));
+    this.gameBox.start(
+      this.rootElement,
+      (newMode) => this.handleModeChange(newMode),
+      (rainbowMode) => this.handleRainbowModeChange(rainbowMode)
+    );
 
     this.addEventListeners();
 
@@ -49,8 +53,8 @@ class GuessTheNoteGame {
 
     this.pianoPositioner = new SmartElementPositioner(this.pianoDivElement, {
       container: this.rootElement,
-      position: [0, 40],
-      size: [100, 40],
+      position: [0, 36],
+      size: [100, 41],
       sizeCallback: (self, pixelDims) => {
         if (this.piano && pixelDims.width > 0 && pixelDims.height > 0) {
           this.piano.setSizeAndPosition(pixelDims.width, pixelDims.height);
@@ -74,6 +78,16 @@ class GuessTheNoteGame {
     this.updateUI();
   }
 
+  handleRainbowModeChange(rainbowMode) {
+    const isMonochrome = (rainbowMode === 'NONE');
+    if (this.piano) {
+      this.piano.setMonochrome(isMonochrome);
+      if (this.gameMode === 'STAFF_READING' && this.targetStaffNote) {
+        this.piano.centerOnMidi(this.targetStaffNote.midi, false);
+      }
+    }
+  }
+
   handleModeChange(newMode) {
     this.gameMode = newMode;
     this.stopRound();
@@ -85,11 +99,14 @@ class GuessTheNoteGame {
         this.keySelector.toggleButton.style.display = 'none';
       }
       this.gameBox.setFeedbackText('play the note...');
+      const isMonochrome = (this.gameBox.rainbowMode === 'NONE');
+      this.piano.setMonochrome(isMonochrome);
     } else {
       if (this.keySelector && this.keySelector.toggleButton) {
         this.keySelector.toggleButton.style.display = 'flex';
       }
       this.gameBox.setFeedbackText('guess the note...');
+      this.piano.setMonochrome(false);
     }
     this.updateUI();
   }
@@ -172,8 +189,8 @@ class GuessTheNoteGame {
     const promptDiv = this.gameBox.getPromptDiv();
     if (promptDiv) promptDiv.classList.remove('correct', 'incorrect', 'pulse-green', 'pulse-red');
 
-    const minStaffMidi = 38; // D2
-    const maxStaffMidi = 81; // A5
+    const minStaffMidi = 38;
+    const maxStaffMidi = 81;
 
     const chromaticEnharmonics = {
       0: [{ name: 'C', accidental: '' }],
@@ -392,7 +409,7 @@ class GuessTheNoteGame {
           numberElement.dataset.sequenceIndex = `${index + 1}`;
           numberElement.dataset.midi = `${midiCode}`;
           const keyInfo = this.piano.graphicPiano.getKeyByMidi(midiCode);
-          const isBlack = keyInfo?.bbox.isBlack ?? false;
+          const isBlack = (keyInfo && keyInfo.bbox) ? keyInfo.bbox.isBlack : false;
           numberElement.style.color = isBlack ? 'white' : 'black';
           numberElement.style.fontSize = '48px';
           numberElement.style.textShadow = isBlack ? '2px 2px 0 black' : '-2px -2px 0 white';
@@ -461,7 +478,7 @@ class GuessTheNoteGame {
       return;
     }
 
-    if (customData?.sequenceIndex !== undefined) return;
+    if (customData && customData.sequenceIndex !== undefined) return;
     if (this.state === this.States.PLAYING) return;
 
     if (eventType === 'start') {
@@ -532,7 +549,7 @@ class GuessTheNoteGame {
       numberOverlay.textContent = `${this.hiddenIndex + 1}`;
       numberOverlay.dataset.midi = `${guessedMidi}`;
       const keyInfo = this.piano.graphicPiano.getKeyByMidi(guessedMidi);
-      const isBlack = keyInfo?.bbox.isBlack ?? false;
+      const isBlack = (keyInfo && keyInfo.bbox) ? keyInfo.bbox.isBlack : false;
       numberOverlay.style.color = isBlack ? 'white' : 'black';
       numberOverlay.style.fontSize = '48px';
       numberOverlay.style.textShadow = isBlack ? '2px 2px 0 black' : '-2px -2px 0 white';
@@ -965,21 +982,25 @@ class GuessTheNoteGame {
   async run(env) {
     if (this.rootElement) this.destroy();
     this.env = env;
-    this.rootElement = env?.container || document.getElementById('app-root') || document.body;
+    this.rootElement = env.container;
 
     document.documentElement.style.height = '100%';
+    document.documentElement.style.width = '100%';
     document.documentElement.style.margin = '0';
     document.documentElement.style.padding = '0';
+    document.documentElement.style.overflow = 'hidden';
+
     document.body.style.height = '100%';
+    document.body.style.width = '100%';
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     document.body.style.overflow = 'hidden';
 
-    this.rootElement.style.position = 'absolute';
+    this.rootElement.style.position = 'relative';
     this.rootElement.style.top = '0';
     this.rootElement.style.left = '0';
-    this.rootElement.style.width = '100vw';
-    this.rootElement.style.height = '100vh';
+    this.rootElement.style.width = '100%';
+    this.rootElement.style.height = '100%';
     this.rootElement.style.overflow = 'hidden';
 
     this.rootElement.classList.add('guess-the-note-wrapper');
@@ -1102,10 +1123,10 @@ class GuessTheNoteGame {
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 100vw;
-        height: 100vh;
+        width: 100%;
+        height: 100%;
         overflow: hidden;
-        position: absolute;
+        position: relative;
         top: 0;
         left: 0;
         transition: background-color 0.5s ease-in-out;

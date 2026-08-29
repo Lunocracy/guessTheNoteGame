@@ -15,7 +15,6 @@ class InstrumentSelector {
     this.currentInstrument = 'Piano';
     this.spriteSize = 300;
 
-    // Self-contained SVG Data URI ensures immediate rendering across any path/sandbox
     this.spriteUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(`<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
   <defs>
@@ -33,27 +32,25 @@ class InstrumentSelector {
   <style>
     .cell { fill: url(#cellBg); stroke: #2a364f; stroke-width: 4; rx: 20; }
     .label { font-family: 'Architects Daughter', Arial, sans-serif; font-size: 26px; font-weight: bold; fill: #ffffff; text-anchor: middle; }
-    .sub { font-family: 'Architects Daughter', Arial, sans-serif; font-size: 16px; fill: #00f2fe; text-anchor: middle; }
   </style>
 
   <!-- [0] Wurlitzer EP -->
   <g transform="translate(10, 10)">
     <rect width="280" height="280" class="cell"/>
-    <rect x="40" y="80" width="200" height="90" rx="8" fill="#a83232" stroke="#ff6b6b" stroke-width="3"/>
-    <rect x="50" y="110" width="180" height="50" fill="#ffffff"/>
-    <rect x="65" y="110" width="15" height="30" fill="#111111"/>
-    <rect x="95" y="110" width="15" height="30" fill="#111111"/>
-    <rect x="140" y="110" width="15" height="30" fill="#111111"/>
-    <rect x="170" y="110" width="15" height="30" fill="#111111"/>
-    <rect x="200" y="110" width="15" height="30" fill="#111111"/>
-    <text x="140" y="215" class="label">Wurlitzer EP</text>
-    <text x="140" y="245" class="sub">Electric Piano</text>
+    <rect x="40" y="70" width="200" height="90" rx="8" fill="#a83232" stroke="#ff6b6b" stroke-width="3"/>
+    <rect x="50" y="100" width="180" height="50" fill="#ffffff"/>
+    <rect x="65" y="100" width="15" height="30" fill="#111111"/>
+    <rect x="95" y="100" width="15" height="30" fill="#111111"/>
+    <rect x="140" y="100" width="15" height="30" fill="#111111"/>
+    <rect x="170" y="100" width="15" height="30" fill="#111111"/>
+    <rect x="200" y="100" width="15" height="30" fill="#111111"/>
+    <text x="140" y="240" class="label">Wurlitzer EP</text>
   </g>
 
   <!-- [1] Electric Guitar -->
   <g transform="translate(310, 10)">
     <rect width="280" height="280" class="cell"/>
-    <g transform="translate(140, 115) rotate(-35)">
+    <g transform="translate(140, 105) rotate(-35)">
       <rect x="-6" y="-95" width="12" height="100" fill="#d7ccc8" stroke="#8d6e63" stroke-width="1.5"/>
       <line x1="-6" y1="-80" x2="6" y2="-80" stroke="#8d6e63" stroke-width="1"/>
       <line x1="-6" y1="-65" x2="6" y2="-65" stroke="#8d6e63" stroke-width="1"/>
@@ -77,14 +74,13 @@ class InstrumentSelector {
       <line x1="0" y1="-115" x2="0" y2="44" stroke="#ffffff" stroke-width="0.8" opacity="0.8"/>
       <line x1="3" y1="-115" x2="3" y2="44" stroke="#ffffff" stroke-width="0.8" opacity="0.8"/>
     </g>
-    <text x="140" y="215" class="label">Electric Guitar</text>
-    <text x="140" y="245" class="sub">Rock Lead</text>
+    <text x="140" y="240" class="label">Electric Guitar</text>
   </g>
 
   <!-- [2] Marimba -->
   <g transform="translate(610, 10)">
     <rect width="280" height="280" class="cell"/>
-    <g transform="translate(45, 60)">
+    <g transform="translate(45, 50)">
       <rect x="0" y="0" width="22" height="110" rx="3" fill="#8d5b4c" stroke="#d7ccc8" stroke-width="2"/>
       <rect x="26" y="10" width="22" height="100" rx="3" fill="#8d5b4c" stroke="#d7ccc8" stroke-width="2"/>
       <rect x="52" y="20" width="22" height="90" rx="3" fill="#8d5b4c" stroke="#d7ccc8" stroke-width="2"/>
@@ -95,14 +91,13 @@ class InstrumentSelector {
       <circle cx="50" cy="40" r="12" fill="#ff5252"/>
       <line x1="50" y1="40" x2="160" y2="130" stroke="#ffeb3b" stroke-width="4"/>
     </g>
-    <text x="140" y="215" class="label">Marimba</text>
-    <text x="140" y="245" class="sub">Wooden Mallet</text>
+    <text x="140" y="240" class="label">Marimba</text>
   </g>
 
   <!-- [3] Piano -->
   <g transform="translate(10, 310)">
     <rect width="280" height="280" class="cell"/>
-    <g transform="translate(40, 60)">
+    <g transform="translate(40, 50)">
       <rect x="0" y="0" width="200" height="110" rx="10" fill="#000000" stroke="#00f2fe" stroke-width="3"/>
       <rect x="10" y="30" width="180" height="70" fill="#ffffff" rx="4"/>
       <line x1="36" y1="30" x2="36" y2="100" stroke="#333" stroke-width="2"/>
@@ -117,27 +112,25 @@ class InstrumentSelector {
       <rect x="130" y="30" width="18" height="42" fill="#111111"/>
       <rect x="156" y="30" width="18" height="42" fill="#111111"/>
     </g>
-    <text x="140" y="215" class="label">Grand Piano</text>
-    <text x="140" y="245" class="sub">Acoustic Concert</text>
+    <text x="140" y="240" class="label">Piano</text>
   </g>
 
   <!-- [4] Music Box -->
   <g transform="translate(310, 310)">
     <rect width="280" height="280" class="cell"/>
-    <g transform="translate(50, 60)">
+    <g transform="translate(50, 50)">
       <rect x="20" y="30" width="140" height="90" rx="8" fill="#5d4037" stroke="#bcaaa4" stroke-width="3"/>
       <circle cx="90" cy="75" r="25" fill="#ffd54f" stroke="#ffb300" stroke-width="3"/>
       <circle cx="160" cy="50" r="10" fill="#ffd54f"/>
       <path d="M160,50 Q180,40 180,65" stroke="#ffd54f" stroke-width="5" fill="none"/>
     </g>
-    <text x="140" y="215" class="label">Music Box</text>
-    <text x="140" y="245" class="sub">Chimes &amp; Bells</text>
+    <text x="140" y="240" class="label">Music Box</text>
   </g>
 
   <!-- [5] Vibes -->
   <g transform="translate(610, 310)">
     <rect width="280" height="280" class="cell"/>
-    <g transform="translate(45, 60)">
+    <g transform="translate(45, 50)">
       <rect x="0" y="20" width="190" height="25" rx="4" fill="#cfd8dc" stroke="#90a4ae" stroke-width="2"/>
       <rect x="15" y="45" width="20" height="70" fill="#78909c" rx="3"/>
       <rect x="45" y="45" width="20" height="65" fill="#78909c" rx="3"/>
@@ -147,14 +140,13 @@ class InstrumentSelector {
       <rect x="165" y="45" width="20" height="45" fill="#78909c" rx="3"/>
       <circle cx="130" cy="20" r="12" fill="#29b6f6"/>
     </g>
-    <text x="140" y="215" class="label">Vibes</text>
-    <text x="140" y="245" class="sub">Vibraphone</text>
+    <text x="140" y="240" class="label">Vibes</text>
   </g>
 
   <!-- [6] Harp -->
   <g transform="translate(10, 610)">
     <rect width="280" height="280" class="cell"/>
-    <g transform="translate(60, 50)">
+    <g transform="translate(60, 40)">
       <path d="M30,130 L30,20 C80,20 120,50 140,110 C140,130 110,130 30,130 Z" fill="none" stroke="#ffb300" stroke-width="6"/>
       <line x1="45" y1="125" x2="45" y2="30" stroke="#ffe082" stroke-width="2"/>
       <line x1="60" y1="125" x2="60" y2="40" stroke="#ffe082" stroke-width="2"/>
@@ -163,28 +155,26 @@ class InstrumentSelector {
       <line x1="105" y1="125" x2="105" y2="86" stroke="#ffe082" stroke-width="2"/>
       <line x1="120" y1="125" x2="120" y2="105" stroke="#ffe082" stroke-width="2"/>
     </g>
-    <text x="140" y="215" class="label">Harp</text>
-    <text x="140" y="245" class="sub">Concert Strings</text>
+    <text x="140" y="240" class="label">Harp</text>
   </g>
 
   <!-- [7] Steel Drum -->
   <g transform="translate(310, 610)">
     <rect width="280" height="280" class="cell"/>
-    <g transform="translate(50, 50)">
+    <g transform="translate(50, 45)">
       <ellipse cx="90" cy="75" rx="75" ry="50" fill="#37474f" stroke="#78909c" stroke-width="4"/>
       <ellipse cx="60" cy="65" rx="18" ry="12" fill="#546e7a" stroke="#90a4ae" stroke-width="2"/>
       <ellipse cx="120" cy="65" rx="18" ry="12" fill="#546e7a" stroke="#90a4ae" stroke-width="2"/>
       <ellipse cx="90" cy="95" rx="20" ry="12" fill="#546e7a" stroke="#90a4ae" stroke-width="2"/>
       <circle cx="90" cy="60" r="8" fill="#ff7043"/>
     </g>
-    <text x="140" y="215" class="label">Steel Drum</text>
-    <text x="140" y="245" class="sub">Caribbean Pan</text>
+    <text x="140" y="240" class="label">Steel Drum</text>
   </g>
 
   <!-- [8] Random -->
   <g transform="translate(610, 610)">
     <rect width="280" height="280" class="cell"/>
-    <g transform="translate(60, 55)">
+    <g transform="translate(60, 45)">
       <rect x="25" y="25" width="110" height="110" rx="18" fill="#7b1fa2" stroke="#e1bee7" stroke-width="4"/>
       <circle cx="50" cy="50" r="10" fill="#ffffff"/>
       <circle cx="110" cy="50" r="10" fill="#ffffff"/>
@@ -192,8 +182,7 @@ class InstrumentSelector {
       <circle cx="50" cy="110" r="10" fill="#ffffff"/>
       <circle cx="110" cy="110" r="10" fill="#ffffff"/>
     </g>
-    <text x="140" y="215" class="label">Random</text>
-    <text x="140" y="245" class="sub">Surprise Sound</text>
+    <text x="140" y="240" class="label">Random</text>
   </g>
 </svg>`);
   }
@@ -208,7 +197,7 @@ class InstrumentSelector {
         background: 'rgba(15, 23, 42, 0.85)',
         zIndex: '10',
         cursor: 'pointer',
-        borderRadius: '10px',
+        borderRadius: '12px',
         border: '1.5px solid rgba(255, 255, 255, 0.25)',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
         backgroundImage: `url("${this.spriteUrl}")`,
@@ -249,11 +238,11 @@ class InstrumentSelector {
 
     this.positioner = new SmartElementPositioner(this.currentDisplay, {
       container: this.game.rootElement,
-      position: [55, 80],
-      size: [22, 22],
+      position: [75, 79],
+      size: [17, 17],
       aspectRatio: 1,
       sizeCallback: (self, pixelDims) => {
-        const fontSize = Math.max(10, Math.min(13, pixelDims.height * 0.18));
+        const fontSize = Math.max(9, Math.min(13, pixelDims.height * 0.18));
         this.labelPill.style.fontSize = `${fontSize}px`;
       },
     });

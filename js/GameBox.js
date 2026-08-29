@@ -4,6 +4,8 @@ class GameBox {
     this.staffView = new StaffView();
     this.currentMode = 'EAR_TRAINING';
     this.lastStaffNoteParams = null;
+    this.rainbowMode = 'ALL';
+    this.onRainbowModeChange = null;
     this.config = {
       noteBaseFontSize: 400,
       feedbackBaseFontSize: 24,
@@ -12,8 +14,9 @@ class GameBox {
     };
   }
 
-  start(rootElement, onModeChange) {
+  start(rootElement, onModeChange, onRainbowModeChange) {
     this.onModeChange = onModeChange;
+    this.onRainbowModeChange = onRainbowModeChange;
     this.div = makeElement('div', {
       style: {
         position: 'absolute',
@@ -36,8 +39,8 @@ class GameBox {
 
     this.positioner = new SmartElementPositioner(this.div, {
       container: rootElement,
-      position: [7.5, 7],
-      size: [85, 30],
+      position: [7.5, 6.5],
+      size: [85, 28],
       aspectRatio: null,
       sizeCallback: (self, pixelDims) => {
         const fontScale = Math.min(pixelDims.width / 400, pixelDims.height / 200);
@@ -145,18 +148,22 @@ class GameBox {
 
     this.rainbowToggleBtn = makeElement('button', {
       textContent: '🌈',
-      title: 'Toggle Staff Rainbow Spectrum',
+      title: 'Rainbow Mode: Staff + Keyboard',
       className: 'rainbow-toggle-btn active',
       style: {
         display: 'none',
-        background: 'rgba(2, 132, 199, 0.4)',
-        border: '1px solid #00f2fe',
+        background: 'rgba(2, 132, 199, 0.45)',
+        border: '1.5px solid #00f2fe',
         borderRadius: '8px',
         padding: '3px 8px',
         cursor: 'pointer',
-        fontSize: '14px',
-        lineHeight: '1',
-        transition: 'all 0.15s ease',
+        fontSize: '13px',
+        lineHeight: '1.1',
+        fontWeight: 'bold',
+        fontFamily: '"Architects Daughter", Arial, sans-serif',
+        color: '#ffffff',
+        transition: 'all 0.2s ease',
+        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3)',
       },
       onclick: () => this.toggleRainbowMode(),
     });
@@ -220,7 +227,6 @@ class GameBox {
     });
     this.staffDisplayWrapper.appendChild(this.staffDisplay);
 
-    // Superimposed badge with single-color representation matching note letter
     this.superimposedSuccessBadge = makeElement('div', {
       className: 'superimposed-success-badge',
       style: {
@@ -326,7 +332,6 @@ class GameBox {
       }
     }
 
-    // Single unified color representing the root letter name
     const singleColorRgb = PianoUtils.getNoteColor(rootColorMidi);
     const singleColorHex = PianoUtils.rgbToHex(PianoUtils.toPastel(singleColorRgb));
 
@@ -372,13 +377,44 @@ class GameBox {
   }
 
   toggleRainbowMode() {
-    this.staffView.showRainbow = !this.staffView.showRainbow;
-    this.rainbowToggleBtn.style.background = this.staffView.showRainbow
-      ? 'rgba(2, 132, 199, 0.4)'
-      : 'rgba(255, 255, 255, 0.08)';
-    this.rainbowToggleBtn.style.borderColor = this.staffView.showRainbow
-      ? '#00f2fe'
-      : 'rgba(255, 255, 255, 0.2)';
+    if (this.rainbowMode === 'ALL') {
+      this.setRainbowMode('PIANO_ONLY');
+    } else if (this.rainbowMode === 'PIANO_ONLY') {
+      this.setRainbowMode('NONE');
+    } else {
+      this.setRainbowMode('ALL');
+    }
+  }
+
+  setRainbowMode(mode) {
+    this.rainbowMode = mode;
+
+    if (mode === 'ALL') {
+      this.staffView.showRainbow = true;
+      this.rainbowToggleBtn.textContent = '🌈';
+      this.rainbowToggleBtn.title = 'Color Mode: Full Rainbow (Staff + Keyboard) • Click for B&W Staff';
+      this.rainbowToggleBtn.style.background = 'rgba(2, 132, 199, 0.45)';
+      this.rainbowToggleBtn.style.borderColor = '#00f2fe';
+      this.rainbowToggleBtn.style.boxShadow = '0 0 10px rgba(0, 242, 254, 0.4)';
+    } else if (mode === 'PIANO_ONLY') {
+      this.staffView.showRainbow = false;
+      this.rainbowToggleBtn.textContent = '🌈🎹';
+      this.rainbowToggleBtn.title = 'Color Mode: B&W Staff + Rainbow Keyboard • Click for Full Monochrome';
+      this.rainbowToggleBtn.style.background = 'rgba(147, 51, 234, 0.45)';
+      this.rainbowToggleBtn.style.borderColor = '#c084fc';
+      this.rainbowToggleBtn.style.boxShadow = '0 0 10px rgba(192, 132, 252, 0.4)';
+    } else {
+      this.staffView.showRainbow = false;
+      this.rainbowToggleBtn.textContent = '🎼';
+      this.rainbowToggleBtn.title = 'Color Mode: Full Monochrome (Staff + Keyboard) • Click for Full Rainbow';
+      this.rainbowToggleBtn.style.background = 'rgba(255, 255, 255, 0.08)';
+      this.rainbowToggleBtn.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+      this.rainbowToggleBtn.style.boxShadow = 'none';
+    }
+
+    if (this.onRainbowModeChange) {
+      this.onRainbowModeChange(this.rainbowMode);
+    }
 
     if (this.lastStaffNoteParams) {
       this.displayStaffNote(
@@ -411,6 +447,7 @@ class GameBox {
       this.feedbackText.textContent = 'play the note...';
       this.rainbowToggleBtn.style.display = 'inline-flex';
       this.playAgainButton.style.visibility = 'hidden';
+      this.setRainbowMode(this.rainbowMode);
     }
     if (this.onModeChange) this.onModeChange(mode);
     if (this.positioner) this.positioner.update();

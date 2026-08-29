@@ -13,6 +13,7 @@ class Piano {
       padding: [10, 10],
     };
 
+    this.isMonochrome = false;
     this.containerDiv = this.createContainerDiv();
     this.svgElement = this.createSvgElement();
     this.containerDiv.appendChild(this.svgElement);
@@ -34,6 +35,60 @@ class Piano {
 
     this.cOctaveIndicators = [];
     this.showMiddleCMarker = true;
+  }
+
+  setMonochrome(isMonochrome) {
+    this.isMonochrome = Boolean(isMonochrome);
+
+    const keySpacing = this.isMonochrome ? 2 : 5;
+    const cornerRadius = this.isMonochrome ? 4 : 5;
+    const padding = [10, 10];
+    const borderThickness = this.isMonochrome ? 1 : 4;
+    const blackBorderThickness = this.isMonochrome ? 1 : 2;
+
+    this.settings.keySpacing = keySpacing;
+    this.settings.padding = padding;
+
+    if (this.graphicPiano) {
+      this.graphicPiano.settings.keySpacing = keySpacing;
+      this.graphicPiano.settings.cornerRadius = cornerRadius;
+      this.graphicPiano.settings.padding = padding;
+      this.graphicPiano.settings.blackKeyHeightRatio = 0.55;
+    }
+
+    if (this.glowPiano) {
+      this.glowPiano.settings.monochrome = this.isMonochrome;
+      this.glowPiano.settings.borderThickness = borderThickness;
+      this.glowPiano.settings.blackBorderThickness = blackBorderThickness;
+      this.glowPiano.settings.whiteGlowThickness = this.isMonochrome ? 8 : 10;
+      this.glowPiano.settings.blackGlowThickness = this.isMonochrome ? 8 : 10;
+    }
+
+    if (this.containerDiv && this.containerDiv.parentElement) {
+      const oldLeft = parseFloat(this.containerDiv.style.left);
+      this.setSizeAndPosition(
+        this.containerDiv.parentElement.offsetWidth,
+        this.containerDiv.parentElement.offsetHeight,
+        false,
+        true
+      );
+      if (!isNaN(oldLeft)) {
+        const parentW = this.containerDiv.parentElement.offsetWidth;
+        const svgW = parseFloat(this.containerDiv.style.width) || parentW;
+        if (svgW <= parentW) {
+          this.containerDiv.style.left = `${(parentW - svgW) / 2}px`;
+        } else {
+          const minOffset = parentW - svgW;
+          const maxOffset = 0;
+          this.containerDiv.style.left = `${Math.max(minOffset, Math.min(maxOffset, oldLeft))}px`;
+        }
+      }
+      if (this.gameInstance && this.gameInstance.gameMode === 'STAFF_READING' && this.gameInstance.targetStaffNote) {
+        this.centerOnMidi(this.gameInstance.targetStaffNote.midi, false);
+      }
+    } else if (this.glowPiano) {
+      this.glowPiano.setMonochrome(this.isMonochrome);
+    }
   }
 
   createContainerDiv() {
@@ -73,7 +128,7 @@ class Piano {
     for (let midi = fullStart; midi <= fullEnd; midi++) {
       if (midi % 12 === 0) {
         const octave = Math.floor((midi - 12) / 12);
-        const keyData = this.graphicPiano?.getKeyByMidi?.(midi);
+        const keyData = (this.graphicPiano && this.graphicPiano.getKeyByMidi) ? this.graphicPiano.getKeyByMidi(midi) : null;
         if (!keyData || !keyData.bbox) continue;
 
         const indicator = makeElement('div', {
@@ -114,7 +169,7 @@ class Piano {
     }
   }
 
-  setSizeAndPosition(containerWidth, containerHeight, skipInit) {
+  setSizeAndPosition(containerWidth, containerHeight, skipInit, preserveOffset = false) {
     if (!containerWidth || !containerHeight) return;
 
     let totalWhiteKeys = 0;
@@ -153,10 +208,32 @@ class Piano {
 
     if (!skipInit) {
       this.graphicPiano.updateSize(svgWidth, svgHeight);
-      this.glowPiano.initialize();
+      if (this.glowPiano) {
+        this.glowPiano.settings.monochrome = this.isMonochrome;
+        this.glowPiano.initialize();
+      }
     }
 
     this.setupMiddleCMarker();
+
+    if (preserveOffset) {
+      const currentOffset = parseFloat(this.containerDiv.style.left);
+      if (!isNaN(currentOffset)) {
+        if (svgWidth <= containerWidth) {
+          this.containerDiv.style.left = `${(containerWidth - svgWidth) / 2}px`;
+        } else {
+          const minOffset = containerWidth - svgWidth;
+          const maxOffset = 0;
+          this.containerDiv.style.left = `${Math.max(minOffset, Math.min(maxOffset, currentOffset))}px`;
+        }
+        return;
+      }
+    }
+
+    if (this.gameInstance && this.gameInstance.gameMode === 'STAFF_READING' && this.gameInstance.targetStaffNote) {
+      this.centerOnMidi(this.gameInstance.targetStaffNote.midi, false);
+      return;
+    }
 
     let gameRangeWhiteKeyCountBefore = 0;
     for (let m = this.settings.fullStartMidi; m < this.gameRange.startMidi; m++) {
@@ -255,13 +332,13 @@ class Piano {
   }
 
   addOverlayElement(midi, element, options = {}) {
-    const keyData = this.graphicPiano?.getKeyByMidi?.(midi);
+    const keyData = (this.graphicPiano && this.graphicPiano.getKeyByMidi) ? this.graphicPiano.getKeyByMidi(midi) : null;
     if (!keyData || !keyData.bbox) return;
 
-    const {
-      position: [x, y],
-      size: [width, height],
-    } = keyData.bbox;
+    const x = keyData.bbox.position[0];
+    const y = keyData.bbox.position[1];
+    const width = keyData.bbox.size[0];
+    const height = keyData.bbox.size[1];
 
     element.style.position = 'absolute';
     element.style.left = `${x + width / 2}px`;

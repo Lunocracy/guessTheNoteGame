@@ -40,85 +40,134 @@ class KeySignatureSelector {
   }
 
   start() {
-      this.toggleButton = makeElement('div', {
-        id: 'keySelectorButton',
-        innerHTML: `<span style="font-size: 0.8em;">key:</span>\n${this.selectedKey}`,
+    this.toggleButton = makeElement('div', {
+      id: 'keySelectorButton',
+      innerHTML: `<span style="font-size: 0.75em; opacity: 0.85;">Key:</span><br><strong>${this.selectedKey}</strong>`,
+      style: {
+        position: 'absolute',
+        background: this.getKeyColor('Any'),
+        color: 'white',
+        borderRadius: '12px',
+        border: '1.5px solid rgba(255, 255, 255, 0.25)',
+        padding: '2px',
+        fontFamily: '"Architects Daughter", Arial, sans-serif',
+        cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+        zIndex: '10',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+        whiteSpace: 'normal',
+        textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)',
+        transition: 'transform 0.2s, opacity 0.2s ease, background 0.2s ease, border-color 0.2s',
+        lineHeight: '1.15',
+      },
+    });
+    this.game.rootElement.appendChild(this.toggleButton);
+
+    this.buttonPositioner = new SmartElementPositioner(this.toggleButton, {
+      container: this.game.rootElement,
+      position: [8, 79],
+      size: [17, 17],
+      aspectRatio: 1,
+      sizeCallback: (self, pixelDims) => {
+        const baseFontSize = Math.max(12, Math.min(22, pixelDims.height * 0.32));
+        self.element.style.fontSize = `${baseFontSize}px`;
+        const keySpan = self.element.querySelector('span');
+        if (keySpan) keySpan.style.fontSize = `${baseFontSize * 0.75}px`;
+      },
+    });
+
+    this.toggleButton.addEventListener('click', () => this.togglePopup());
+
+    this.overlay = makeElement('div', {
+      style: {
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        background: 'rgba(0, 0, 0, 0.7)',
+        zIndex: '99',
+        opacity: '0',
+        transition: 'opacity 0.35s ease',
+        pointerEvents: 'none',
+        backdropFilter: 'blur(4px)',
+      },
+    });
+    this.game.rootElement.appendChild(this.overlay);
+
+    this.popup = makeElement('div', {
+      style: {
+        position: 'absolute',
+        background: 'rgba(11, 15, 25, 0.95)',
+        borderRadius: '16px',
+        border: '3px solid #00f2fe',
+        padding: '15px',
+        display: 'none',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignItems: 'center',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 242, 254, 0.3)',
+        zIndex: '100',
+        overflowY: 'auto',
+        transform: 'translateY(100%)',
+        opacity: '0',
+        transition: 'transform 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.35s ease-out',
+      },
+    });
+    this.game.rootElement.appendChild(this.popup);
+
+    this.popupPositioner = new SmartElementPositioner(this.popup, {
+      container: this.game.rootElement,
+      position: [15, 25],
+      size: [70, 50],
+      aspectRatio: null,
+      sizeCallback: (self, pixelDims) => {
+        const viewportHeight = this.game.rootElement.clientHeight;
+        const viewportWidth = this.game.rootElement.clientWidth;
+        let widthPercent = viewportWidth < 600 ? 80 : 60;
+        self.element.style.width = `${(viewportWidth * widthPercent) / 100}px`;
+        self.element.style.left = `${(100 - widthPercent) / 2}%`;
+      },
+    });
+
+    this.keyButtons = {};
+    this.keys.forEach((key) => {
+      const btn = makeElement('div', {
+        textContent: key,
         style: {
-          position: 'absolute', // MUST BE ABSOLUTE
-          background: this.getKeyColor('Any'), color: 'white', borderRadius: '8px', padding: '2px', fontFamily: '"Architects Daughter", Arial, sans-serif',
-          cursor: 'pointer', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)', zIndex: '10', display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center', textAlign: 'center', overflow: 'hidden', boxSizing: 'border-box',
-          whiteSpace: 'pre', textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)', transition: 'transform 0.2s, opacity 0.2s ease, background 0.2s ease', lineHeight: '1.1',
+          width: '50px',
+          height: '50px',
+          background: this.getKeyColor(key),
+          color: 'white',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '8px',
+          cursor: 'pointer',
+          fontFamily: '"Architects Daughter", Arial, sans-serif',
+          fontSize: '18px',
+          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.4)',
+          transition: 'transform 0.2s, opacity 0.4s ease',
         },
       });
-      this.game.rootElement.appendChild(this.toggleButton);
+      btn.addEventListener('mouseover', () => (btn.style.transform = 'scale(1.1)'));
+      btn.addEventListener('mouseout', () => (btn.style.transform = 'scale(1)'));
+      btn.addEventListener('click', () => this.selectKey(key));
+      this.popup.appendChild(btn);
+      this.keyButtons[key] = btn;
+    });
 
-      this.buttonPositioner = new SmartElementPositioner(this.toggleButton, {
-        container: this.game.rootElement, // BIND TO SANDBOX
-        position: [15, 80], size: [22, 22], aspectRatio: 1,
-        sizeCallback: (self, pixelDims) => {
-          const baseFontSize = Math.max(14, Math.min(24, pixelDims.height * 0.35));
-          self.element.style.fontSize = `${baseFontSize}px`;
-          const keySpan = self.element.querySelector('span');
-          if (keySpan) keySpan.style.fontSize = `${baseFontSize * 0.8}px`;
-        },
-      });
-
-      this.toggleButton.addEventListener('click', () => this.togglePopup());
-
-      this.overlay = makeElement('div', {
-        style: { position: 'absolute', top: '0', left: '0', width: '100%', height: '100%', background: 'rgba(0, 0, 0, 0)', zIndex: '99', opacity: '0', transition: 'opacity 0.4s ease', pointerEvents: 'none' },
-      });
-      this.game.rootElement.appendChild(this.overlay);
-
-      this.popup = makeElement('div', {
-        style: {
-          position: 'absolute', // MUST BE ABSOLUTE
-          background: 'rgba(0, 0, 0, 0.9)', borderRadius: '12px', padding: '15px', display: 'none', flexWrap: 'wrap',
-          justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)', zIndex: '100', overflowY: 'auto',
-          transform: 'translateY(100%)', opacity: '0', transition: 'transform 0.4s ease-out, opacity 0.4s ease-out',
-        },
-      });
-      this.game.rootElement.appendChild(this.popup);
-
-      this.popupPositioner = new SmartElementPositioner(this.popup, {
-        container: this.game.rootElement, // BIND TO SANDBOX
-        position: [15, 30], size: [70, 40], aspectRatio: null,
-        sizeCallback: (self, pixelDims) => {
-          const viewportHeight = this.game.rootElement.clientHeight;
-          const viewportWidth = this.game.rootElement.clientWidth;
-          const maxHeightPercent = ((viewportHeight * 0.8) / viewportHeight) * 100;
-          let widthPercent = viewportWidth < 600 ? 70 : 50;
-          let heightPercent = 40;
-          let topPercent = 30;
-          const pixelHeight = pixelDims.height;
-          if (pixelHeight > viewportHeight * 0.8) {
-            heightPercent = maxHeightPercent;
-            topPercent = (100 - heightPercent) / 2;
-          }
-          self.element.style.width = `${(viewportWidth * widthPercent) / 100}px`;
-          self.element.style.height = `${pixelHeight > viewportHeight * 0.8 ? viewportHeight * 0.8 : pixelHeight}px`;
-          self.element.style.left = `${15}%`;
-          self.element.style.top = `${topPercent}%`;
-        },
-      });
-
-      this.keyButtons = {};
-      this.keys.forEach((key) => {
-        const btn = makeElement('div', {
-          textContent: key,
-          style: { width: '50px', height: '50px', background: this.getKeyColor(key), color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '10px', cursor: 'pointer', fontFamily: '"Architects Daughter", Arial, sans-serif', fontSize: '18px', textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)', transition: 'transform 0.2s, opacity 0.4s ease' },
-        });
-        btn.addEventListener('mouseover', () => (btn.style.transform = 'scale(1.1)'));
-        btn.addEventListener('mouseout', () => (btn.style.transform = 'scale(1)'));
-        btn.addEventListener('click', () => this.selectKey(key));
-        this.popup.appendChild(btn);
-        this.keyButtons[key] = btn;
-      });
-
-      this.buttonPositioner.update();
-      this.popupPositioner.update();
-    }
+    this.buttonPositioner.update();
+    this.popupPositioner.update();
+  }
 
   getKeyColor(key) {
     if (key === 'Any') return '#666';
@@ -144,7 +193,7 @@ class KeySignatureSelector {
       this.hidePopup();
     } else {
       this.isPopupVisible = true;
-      this.overlay.style.opacity = '0.7';
+      this.overlay.style.opacity = '1';
       this.overlay.style.pointerEvents = 'auto';
       this.popup.style.display = 'flex';
       this.popupPositioner.update();
@@ -156,55 +205,68 @@ class KeySignatureSelector {
   }
 
   selectKey(key, apply = true) {
-      this.selectedKey = key;
-      const selectedBtn = this.keyButtons[key];
-      const others = Object.values(this.keyButtons).filter((btn) => btn !== selectedBtn);
-      others.forEach((btn) => (btn.style.opacity = '0'));
+    this.selectedKey = key;
+    const selectedBtn = this.keyButtons[key];
+    const others = Object.values(this.keyButtons).filter((btn) => btn !== selectedBtn);
+    others.forEach((btn) => (btn.style.opacity = '0'));
 
-      const buttonRect = this.toggleButton.getBoundingClientRect();
-      const btnRect = selectedBtn.getBoundingClientRect();
-      const rootRect = this.game.rootElement.getBoundingClientRect();
+    const buttonRect = this.toggleButton.getBoundingClientRect();
+    const btnRect = selectedBtn.getBoundingClientRect();
+    const rootRect = this.game.rootElement.getBoundingClientRect();
 
-      const flyStartX = btnRect.left - rootRect.left;
-      const flyStartY = btnRect.top - rootRect.top;
-      const flyEndX = (buttonRect.left - rootRect.left) + buttonRect.width / 2 - btnRect.width / 2;
-      const flyEndY = (buttonRect.top - rootRect.top) + buttonRect.height / 2 - btnRect.height / 2;
+    const flyStartX = btnRect.left - rootRect.left;
+    const flyStartY = btnRect.top - rootRect.top;
+    const flyEndX = (buttonRect.left - rootRect.left) + buttonRect.width / 2 - btnRect.width / 2;
+    const flyEndY = (buttonRect.top - rootRect.top) + buttonRect.height / 2 - btnRect.height / 2;
 
-      const flyback = makeElement('div', {
-        textContent: key,
-        style: {
-          position: 'absolute', left: `${flyStartX}px`, top: `${flyStartY}px`, width: '50px', height: '50px',
-          background: this.getKeyColor(key), color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: '"Architects Daughter", Arial, sans-serif', fontSize: '18px', textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)', zIndex: '101', transition: 'all 0.5s ease-in',
-        },
-      });
-      this.game.rootElement.appendChild(flyback);
+    const flyback = makeElement('div', {
+      textContent: key,
+      style: {
+        position: 'absolute',
+        left: `${flyStartX}px`,
+        top: `${flyStartY}px`,
+        width: '50px',
+        height: '50px',
+        background: this.getKeyColor(key),
+        color: 'white',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: '"Architects Daughter", Arial, sans-serif',
+        fontSize: '18px',
+        textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)',
+        zIndex: '101',
+        transition: 'all 0.5s ease-in',
+      },
+    });
+    this.game.rootElement.appendChild(flyback);
 
-      requestAnimationFrame(() => {
-        flyback.style.transform = `translate(${flyEndX - flyStartX}px, ${flyEndY - flyStartY}px) scale(0.8)`;
-      });
+    requestAnimationFrame(() => {
+      flyback.style.transform = `translate(${flyEndX - flyStartX}px, ${flyEndY - flyStartY}px) scale(0.8)`;
+    });
 
-      setTimeout(() => {
-        this.toggleButton.innerHTML = `<span style="font-size: 0.8em;">key:</span>\n${key}`;
-        this.toggleButton.style.background = this.getKeyColor(key);
-        this.hidePopup();
-        flyback.remove();
-        others.forEach((btn) => (btn.style.opacity = '1'));
-      }, 500);
+    setTimeout(() => {
+      this.toggleButton.innerHTML = `<span style="font-size: 0.75em; opacity: 0.85;">Key:</span><br><strong>${key}</strong>`;
+      this.toggleButton.style.background = this.getKeyColor(key);
+      this.hidePopup();
+      flyback.remove();
+      others.forEach((btn) => (btn.style.opacity = '1'));
+    }, 500);
 
-      if (apply) this.applyKeySignature();
-    }
+    if (apply) this.applyKeySignature();
+  }
 
   hidePopup() {
     this.isPopupVisible = false;
-    this.popup.style.transform = 'translateY(10%)';
+    this.popup.style.transform = 'translateY(15%) scale(0.95)';
     this.popup.style.opacity = '0';
     this.overlay.style.opacity = '0';
     this.overlay.style.pointerEvents = 'none';
     setTimeout(() => {
       this.popup.style.display = 'none';
       this.popup.style.transform = 'translateY(100%)';
-    }, 400);
+    }, 350);
   }
 
   applyKeySignature() {
@@ -323,6 +385,7 @@ class KeySignatureSelector {
   getButtonPositioner() {
     return this.buttonPositioner;
   }
-
 }
 
+globalThis.KeySignatureSelector = KeySignatureSelector;
+if (typeof module !== 'undefined' && module.exports) module.exports = KeySignatureSelector;

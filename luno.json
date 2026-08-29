@@ -31,20 +31,30 @@
     "sound_engines/WafPlayer.js"
   ],
   "styles": [],
-  "processedCountSinceCheckpoint": 3,
+  "processedCountSinceCheckpoint": 50,
   "changedMethods": {
     "guessTheNoteGame/files.json": "2026-08-25T02:14:23.339Z",
     "guessTheNoteGame/luno.json": "2026-08-25T02:14:23.339Z",
     "guessTheNoteGame/js/PianoUtils.js": "2026-08-25T02:14:23.339Z",
     "guessTheNoteGame/js/StaffView.js": "2026-08-27T00:28:45.101Z",
-    "guessTheNoteGame/js/GameBox.js": "2026-08-27T00:28:45.101Z",
-    "guessTheNoteGame/js/Piano.js": "2026-08-28T00:47:34.306Z",
-    "guessTheNoteGame/js/GuessTheNoteGame.js": "2026-08-28T00:47:34.306Z",
+    "guessTheNoteGame/js/GameBox.js": "2026-08-28T10:48:05.982Z",
+    "guessTheNoteGame/js/Piano.js": "2026-08-28T20:39:50.213Z",
+    "guessTheNoteGame/js/GuessTheNoteGame.js": "2026-08-28T20:39:50.213Z",
     "Library/ThreeJSLoader.js": "2026-08-25T13:43:47.665Z",
     "guessTheNoteGame/js/ScoreBox.js": "2026-08-26T23:39:07.699Z",
-    "guessTheNoteGame/js/InstrumentSelector.js": "2026-08-27T00:13:26.313Z",
-    "guessTheNoteGame/resources/instruments.svg": "2026-08-27T00:07:10.014Z"
+    "guessTheNoteGame/js/InstrumentSelector.js": "2026-08-28T06:53:22.617Z",
+    "guessTheNoteGame/resources/instruments.svg": "2026-08-28T06:53:22.617Z",
+    "Luno/core/LunoServer.js": "2026-08-28T06:04:06.774Z",
+    "Luno/app/LunoManifestDecisionEngine.js": "2026-08-28T06:04:06.774Z",
+    "Luno/core/LunoClassPatcher.js": "2026-08-28T06:04:06.774Z",
+    "guessTheNoteGame/index.html": "2026-08-28T06:07:06.236Z",
+    "guessTheNoteGame/js/KeySignatureSelector.js": "2026-08-28T06:53:22.617Z",
+    "guessTheNoteGame/library/GlowPiano.js": "2026-08-28T11:11:50.959Z",
+    "Library/GlowPiano.js": "2026-08-28T10:22:12.126Z",
+    "Library/GlowPiano.js.bak": "2026-08-28T10:22:12.126Z",
+    "LunoPatchLog.html": "2026-08-28T10:22:12.126Z",
+    "guessTheNoteGame/library/GraphicPiano.js": "2026-08-28T11:11:50.959Z"
   },
-  "lastCheckpointTime": "2026-08-28T00:36:05.606Z",
+  "lastCheckpointTime": "2026-08-28T06:11:57.489Z",
   "pendingCheckpointDescription": "Clean working tree"
 }
