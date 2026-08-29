@@ -4,14 +4,10 @@ class MiniPianoMap {
     this.endMidi = options.endMidi || 88;     // E5
     this.width = options.width || 300;
     this.height = options.height || 28;
-    this.visibleStartMidi = 60;
-    this.visibleEndMidi = 71;
     this.visibleFractionStart = 0.35;
     this.visibleFractionEnd = 0.65;
 
     // Realistic acoustic piano black key horizontal offsets
-    // Fraction of offset between left white key center and right white key center:
-    // Standard evenly centered is 0.50.
     // C# is nudged left (~0.42), D# is nudged right (~0.58)
     // F# is nudged left (~0.38), G# is centered (0.50), A# is nudged right (~0.62)
     this.blackKeyOffsets = {
@@ -28,13 +24,15 @@ class MiniPianoMap {
         position: 'absolute',
         display: 'none',
         overflow: 'hidden',
-        borderRadius: '6px',
-        background: 'rgba(15, 23, 42, 0.85)',
-        border: '1px solid rgba(255, 255, 255, 0.18)',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.45)',
+        borderRadius: '8px',
+        background: 'rgba(10, 15, 26, 0.92)',
+        border: '1px solid rgba(255, 255, 255, 0.22)',
+        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.55), inset 0 0 6px rgba(0, 0, 0, 0.6)',
         boxSizing: 'border-box',
         zIndex: '15',
         pointerEvents: 'none',
+        backdropFilter: 'blur(6px)',
+        webkitBackdropFilter: 'blur(6px)',
       },
     });
 
@@ -72,6 +70,12 @@ class MiniPianoMap {
     this.container.style.display = 'none';
   }
 
+  destroy() {
+    if (this.container && this.container.parentElement) {
+      this.container.remove();
+    }
+  }
+
   render() {
     this.svg.innerHTML = '';
     const width = this.width;
@@ -80,7 +84,6 @@ class MiniPianoMap {
 
     this.svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
-    // Count white keys in range
     const whiteKeys = [];
     const blackKeys = [];
 
@@ -100,11 +103,11 @@ class MiniPianoMap {
     if (totalWhite === 0) return;
 
     const keyWidth = width / totalWhite;
-    const strokeWidth = Math.max(1, keyWidth - 0.9);
+    const strokeWidth = Math.max(1, keyWidth - 0.95);
     const blackKeyHeight = height * 0.58;
     const blackStrokeWidth = Math.max(1, strokeWidth * 0.72);
 
-    // 1. Group for White Keys (pure white vertical lines)
+    // 1. White Keys (crisp vertical white lines)
     const whiteGroup = makeElement('svg:g', { className: 'mini-white-keys' });
     whiteKeys.forEach((wk) => {
       const x = wk.whiteIndex * keyWidth + keyWidth / 2;
@@ -113,7 +116,7 @@ class MiniPianoMap {
         y1: 1,
         x2: x,
         y2: height - 1,
-        stroke: '#ffffff',
+        stroke: '#f8fafc',
         'stroke-width': strokeWidth,
         'stroke-linecap': 'butt',
       });
@@ -121,7 +124,7 @@ class MiniPianoMap {
     });
     this.svg.appendChild(whiteGroup);
 
-    // 2. Group for Black Keys (black vertical lines with acoustic offsets)
+    // 2. Black Keys (shorter vertical black lines with acoustic spacing)
     const blackGroup = makeElement('svg:g', { className: 'mini-black-keys' });
     blackKeys.forEach((bk) => {
       const offsetFraction = this.blackKeyOffsets[bk.pitchClass] || 0.5;
@@ -134,7 +137,7 @@ class MiniPianoMap {
         y1: 1,
         x2: x,
         y2: blackKeyHeight,
-        stroke: '#18181b',
+        stroke: '#090d16',
         'stroke-width': blackStrokeWidth,
         'stroke-linecap': 'butt',
       });
@@ -142,13 +145,14 @@ class MiniPianoMap {
     });
     this.svg.appendChild(blackGroup);
 
-    // 3. Viewport highlight overlay & dimming layers
+    // 3. Viewport highlight overlay & dimming layers with smooth glide transitions
     this.dimLeft = makeElement('svg:rect', {
       x: 0,
       y: 0,
       width: 0,
       height: height,
-      fill: 'rgba(0, 0, 0, 0.62)',
+      fill: 'rgba(0, 0, 0, 0.65)',
+      style: { transition: 'x 0.35s ease, width 0.35s ease' },
     });
     this.svg.appendChild(this.dimLeft);
 
@@ -157,7 +161,8 @@ class MiniPianoMap {
       y: 0,
       width: 0,
       height: height,
-      fill: 'rgba(0, 0, 0, 0.62)',
+      fill: 'rgba(0, 0, 0, 0.65)',
+      style: { transition: 'x 0.35s ease, width 0.35s ease' },
     });
     this.svg.appendChild(this.dimRight);
 
@@ -166,10 +171,14 @@ class MiniPianoMap {
       y: 0,
       width: width,
       height: height,
-      fill: 'rgba(0, 242, 254, 0.12)',
+      fill: 'rgba(0, 242, 254, 0.14)',
       stroke: '#00f2fe',
-      'stroke-width': 1.5,
+      'stroke-width': 1.6,
       rx: 2,
+      style: {
+        transition: 'x 0.35s ease, width 0.35s ease',
+        filter: 'drop-shadow(0 0 3px rgba(0, 242, 254, 0.6))',
+      },
     });
     this.svg.appendChild(this.viewportBox);
 

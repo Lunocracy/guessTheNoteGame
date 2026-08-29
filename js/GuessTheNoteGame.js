@@ -1082,6 +1082,9 @@ class GuessTheNoteGame {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
     }
+    if (this.miniPianoMap) {
+      this.miniPianoMap.destroy();
+    }
     if (this.rootElement) {
       this.rootElement.innerHTML = '';
     }
