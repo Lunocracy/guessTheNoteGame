@@ -20,12 +20,12 @@ class StaffView {
 
     this.showRainbow = true;
 
-    // Canonical open-standard musical notation SVG assets
+    // Canonical, line-free musical notation SVG assets
     this.svgUrls = {
-      trebleClef: 'https://upload.wikimedia.org/wikipedia/commons/e/e8/G-clef.svg',
-      bassClef: 'https://upload.wikimedia.org/wikipedia/commons/2/23/Music-Fclef.svg',
-      flat: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Music-flat.svg',
-      sharp: 'https://upload.wikimedia.org/wikipedia/commons/d/da/Music-sharp.svg'
+      trebleClef: 'https://upload.wikimedia.org/wikipedia/commons/f/ff/GClef.svg',
+      bassClef: 'https://upload.wikimedia.org/wikipedia/commons/c/c5/FClef.svg',
+      flat: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Flat.svg',
+      sharp: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Sharp.svg'
     };
   }
 
@@ -164,30 +164,32 @@ class StaffView {
       { x1: endX, y1: staffTopY, x2: endX, y2: staffBottomY, stroke: '#0f172a', 'stroke-width': 2 }
     ]);
 
-    // 5. Clefs (Canonical standard vector SVG files)
+    // 5. Clefs
     if (clef === 'treble') {
+      // Natural 15:41 aspect ratio, height 90px, width 33px
       svgChildren.push([
         'svg:image',
         {
           href: this.svgUrls.trebleClef,
           'xlink:href': this.svgUrls.trebleClef,
-          x: startX + 6,
-          y: staffTopY - 21,
-          width: 36,
-          height: 100,
+          x: startX + 8,
+          y: staffTopY - 15,
+          width: 33,
+          height: 90,
           preserveAspectRatio: 'xMidYMid meet'
         }
       ]);
     } else {
+      // Natural 18:20 aspect ratio, height 46px, width 41px
       svgChildren.push([
         'svg:image',
         {
           href: this.svgUrls.bassClef,
           'xlink:href': this.svgUrls.bassClef,
           x: startX + 8,
-          y: staffTopY + 1,
-          width: 36,
-          height: 52,
+          y: staffTopY + 2,
+          width: 41,
+          height: 46,
           preserveAspectRatio: 'xMidYMid meet'
         }
       ]);
@@ -217,32 +219,34 @@ class StaffView {
       addLedgerLine(noteY, 0);
     }
 
-    // 7. Accidental (Canonical standard vector SVG files)
+    // 7. Accidentals
     if (accidental) {
       const isSharp = accidental === '#';
       if (isSharp) {
+        // Natural 20:63 aspect ratio, height 30px, width 10px
         svgChildren.push([
           'svg:image',
           {
             href: this.svgUrls.sharp,
             'xlink:href': this.svgUrls.sharp,
-            x: noteX - 32,
-            y: noteY - 18,
-            width: 17,
-            height: 36,
+            x: noteX - 22,
+            y: noteY - 15,
+            width: 10,
+            height: 30,
             preserveAspectRatio: 'xMidYMid meet'
           }
         ]);
       } else {
+        // Natural 20:43 aspect ratio, height 25px, width 12px (reduced by ~30%)
         svgChildren.push([
           'svg:image',
           {
             href: this.svgUrls.flat,
             'xlink:href': this.svgUrls.flat,
-            x: noteX - 30,
-            y: noteY - 24,
-            width: 16,
-            height: 38,
+            x: noteX - 22,
+            y: noteY - 17,
+            width: 12,
+            height: 25,
             preserveAspectRatio: 'xMidYMid meet'
           }
         ]);
